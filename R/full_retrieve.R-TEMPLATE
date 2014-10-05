@@ -1,0 +1,23 @@
+## In the third line below, you will need to input your own
+## database details from your personal setup.
+## user is traditionally "postgres", while host is often
+## "localhost".  Password may be unnecessary, depending on
+## your local db settings.
+
+library(RPostgreSQL)
+driv <- dbDriver("PostgreSQL")
+conn <- dbConnect(driv, dbname = <--dbname-->, user = <--user-->,
+                  password = <--password-->, host = <--localhost-->)
+rs <- dbSendQuery(conn, statement = "SELECT * from skaters;")
+skaters <- fetch(rs, n = -1)
+dbClearResult(rs)
+rs <- dbSendQuery(conn, statement = "SELECT * from skaterstats;")
+skaterstats <- fetch(rs, n = -1)
+dbClearResult(rs)
+rs <- dbSendQuery(conn, statement = "SELECT * from goalies;")
+goalies <- fetch(rs, n = -1)
+dbClearResult(rs)
+rs <- dbSendQuery(conn, statement = "SELECT * from goaliestats;")
+goaliestats <- fetch(rs, n = -1)
+dbClearResult(rs)
+dbDisconnect(conn)
