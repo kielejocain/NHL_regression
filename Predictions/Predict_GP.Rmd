@@ -1,7 +1,9 @@
 ---
 title: "Predicting Games Played"
 author: "Kyle Joecken"
-output: pdf_document
+output:
+      html_document:
+            keep_md: true
 ---
 
 Injuries: The bane of any promising fantasy season.
