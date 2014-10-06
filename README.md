@@ -13,4 +13,7 @@ File Structure
 
 The `R/` folder contains code for importing the data from the PostgreSQL database as built in my `NHL_sql` repo.  We will include .Rmd, .md, and .pdf files in the `Predictions/` folder for each statistic modeled.
 
-If you do not care to replicate the analysis, either the .md or .pdf files should be sufficiently legible.  If you'd like to run the analysis locally, first clone and run the code in `NHL_sql`, then weave the .Rmd files using knitR (RStudio has this built in).
+Replication
+-----------
+
+If you'd like to run the analysis locally, first clone and run the code in `NHL_sql`, then weave the .Rmd files using knitR (RStudio has this built in).  You'll need to edit the `R/full_retrieve.R-TRMPLATE` file with your local data details and save without the `-TEMPLATE` "extension."
