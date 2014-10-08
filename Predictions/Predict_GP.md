@@ -115,4 +115,4 @@ plot(I(gp.predicted - games_played.2014) ~ games_played.2013, data = gp1214,
 
 ![plot of chunk unnamed-chunk-5](./Predict_GP_files/figure-html/unnamed-chunk-5.png) 
 
-Obivously these data are massively noisy, and much variance remains unexplained.
+Obivously these data are massively noisy, and much variance remains unexplained.  Rather than try to tease further through such a hideous data set, we'll use this admittedly specious model until we retrieve our game-by-game data; at that point, classifying games missed by healthy or unhealthy should go a long way toward zeroing in on some signal.
