@@ -1,0 +1,382 @@
+---
+title: "Predicting Games Played"
+author: "Kyle Joecken"
+output: pdf_document
+---
+
+## Question
+
+Can we use data from previous seasons to predict how much time a particular NHL skater will get on the ice (TOI) in various situations (even strength, short-handed, power play) in the upcoming 2014-2015 season?
+
+## Data
+
+As before, we load our database of season-wide NHL data into a data frame called `skaterstats`.  We'll also grab our games played predictions and store it in a data frame called `skatpred15`.
+
+```{r, echo=FALSE, results='hide', include=FALSE}
+library(RPostgreSQL)
+driv <- dbDriver("PostgreSQL")
+conn <- dbConnect(driv, dbname = "nhltest", user = "postgres", password = "hollyleaf", host = "localhost")
+rs <- dbSendQuery(conn, statement = "SELECT * FROM skaterstats
+                  ORDER BY season, nhl_num;")
+skaterstats <- fetch(rs, n = -1)
+dbClearResult(rs)
+dbDisconnect(conn)
+```
+
+## Features
+
+We first shave off all but the useful variables, as we did before.  We should break up the data into three separate chunks, one for each of the three situations.
+
+```{r}
+skattoi <- skaterstats[, c(1, 2, 6, 45:47)]
+skattoi$es_toi_pg <- skattoi$es_toi / skattoi$games_played
+skattoi$sh_toi_pg <- skattoi$sh_toi / skattoi$games_played
+skattoi$pp_toi_pg <- skattoi$pp_toi / skattoi$games_played
+skattoipg <- skattoi[, c(1, 2, 7:9)]
+estoipg <- reshape(skattoipg[, c(1:3)], timevar = "season",
+                   idvar = "nhl_num", direction = "wide")
+shtoipg <- reshape(skattoipg[, c(1, 2, 4)], timevar = "season",
+                   idvar = "nhl_num", direction = "wide")
+pptoipg <- reshape(skattoipg[, c(1, 2, 5)], timevar = "season",
+                   idvar = "nhl_num", direction = "wide")
+```
+
+Next, let's have a look at all players that played in all of the first 5 years
+of our data and use `pairs(` to look at correlation between years visually.
+
+```{r}
+estoi9802 <- estoipg[!is.na(estoipg$es_toi_pg.1998) &
+                            !is.na(estoipg$es_toi_pg.1999) &
+                            !is.na(estoipg$es_toi_pg.2000) &
+                            !is.na(estoipg$es_toi_pg.2001) &
+                            !is.na(estoipg$es_toi_pg.2002), 2:6]
+pairs(estoi9802)
+```
+
+That's pretty.  Next, we fit linear models going further and further back, then run `ANOVA()` to see how far back we can go while still feasibly gaining explained variance.
+
+```{r}
+fit1 <- lm(es_toi_pg.2002 ~ es_toi_pg.2001, data = estoi9802)
+fit2 <- lm(es_toi_pg.2002 ~ es_toi_pg.2001 + es_toi_pg.2000, data = estoi9802)
+fit3 <- lm(es_toi_pg.2002 ~ es_toi_pg.2001 + es_toi_pg.2000 + es_toi_pg.1999,
+           data = estoi9802)
+fit4 <- lm(es_toi_pg.2002 ~ es_toi_pg.2001 + es_toi_pg.2000 + es_toi_pg.1999
+            + es_toi_pg.1998, data = estoi9802)
+anova(fit1, fit2, fit3, fit4)
+```
+
+As in the games played analysis, we see that little to nothing is gained by adding the third and fourth seasons previous as regressors, and that the coefficients aren't statistically significant anyway.  As before, we'll simply use the previous two seasons as regressors.
+
+```{r, echo=FALSE, results='hide'}
+pptoi9802 <- pptoipg[!is.na(pptoipg$pp_toi_pg.1998) &
+                           !is.na(pptoipg$pp_toi_pg.1999) &
+                           !is.na(pptoipg$pp_toi_pg.2000) &
+                           !is.na(pptoipg$pp_toi_pg.2001) &
+                           !is.na(pptoipg$pp_toi_pg.2002), 2:6]
+fit1 <- lm(pp_toi_pg.2002 ~ pp_toi_pg.2001, data = pptoi9802)
+fit2 <- lm(pp_toi_pg.2002 ~ pp_toi_pg.2001 + pp_toi_pg.2000, data = pptoi9802)
+fit3 <- lm(pp_toi_pg.2002 ~ pp_toi_pg.2001 + pp_toi_pg.2000 + pp_toi_pg.1999, 
+           data = pptoi9802)
+fit4 <- lm(pp_toi_pg.2002 ~ pp_toi_pg.2001 + pp_toi_pg.2000 + pp_toi_pg.1999 +
+                 pp_toi_pg.1998, data = pptoi9802)
+anova(fit1, fit2, fit3, fit4)
+shtoi9802 <- shtoipg[!is.na(shtoipg$sh_toi_pg.1998) &
+                          !is.na(shtoipg$sh_toi_pg.1999) &
+                          !is.na(shtoipg$sh_toi_pg.2000) &
+                          !is.na(shtoipg$sh_toi_pg.2001) &
+                          !is.na(shtoipg$sh_toi_pg.2002), 2:6]
+fit1 <- lm(sh_toi_pg.2002 ~ sh_toi_pg.2001, data = shtoi9802)
+fit2 <- lm(sh_toi_pg.2002 ~ sh_toi_pg.2001 + sh_toi_pg.2000, data = shtoi9802)
+fit3 <- lm(sh_toi_pg.2002 ~ sh_toi_pg.2001 + sh_toi_pg.2000 + sh_toi_pg.1999,
+            data = shtoi9802)
+fit4 <- lm(sh_toi_pg.2002 ~ sh_toi_pg.2001 + sh_toi_pg.2000 + sh_toi_pg.1999 +
+                 sh_toi_pg.1998, data = shtoi9802)
+anova(fit1, fit2, fit3, fit4)
+```
+
+The analysis for power play and short-handed time is similar; for power play TOI, there is statistically nothing gained by considering the season three years previous.  For short-handed TOI, the season three years previous is statistically significant but not practically significant; for simplicity and legibility, we stay consistent by using the previous two seasons to predict the next.  The code is included in the `.Rmd` file but hidden for brevity.
+
+## Algorithm
+
+As we have decided upon the same basic model as we did for games played, we will proceed in much the same manner for TOI.
+
+```{r, echo=FALSE}
+es9800 <- estoipg[!is.na(estoipg$es_toi_pg.1998) &
+                            !is.na(estoipg$es_toi_pg.1999) &
+                            !is.na(estoipg$es_toi_pg.2000), 1:4]
+es9901 <- estoipg[!is.na(estoipg$es_toi_pg.1999) &
+                            !is.na(estoipg$es_toi_pg.2000) &
+                            !is.na(estoipg$es_toi_pg.2001), c(1, 3:5)]
+es0002 <- estoipg[!is.na(estoipg$es_toi_pg.2000) &
+                            !is.na(estoipg$es_toi_pg.2001) &
+                            !is.na(estoipg$es_toi_pg.2002), c(1, 4:6)]
+es0103 <- estoipg[!is.na(estoipg$es_toi_pg.2001) &
+                            !is.na(estoipg$es_toi_pg.2002) &
+                            !is.na(estoipg$es_toi_pg.2003), c(1, 5:7)]
+es0204 <- estoipg[!is.na(estoipg$es_toi_pg.2002) &
+                            !is.na(estoipg$es_toi_pg.2003) &
+                            !is.na(estoipg$es_toi_pg.2004), c(1, 6:8)]
+es0306 <- estoipg[!is.na(estoipg$es_toi_pg.2003) &
+                            !is.na(estoipg$es_toi_pg.2004) &
+                            !is.na(estoipg$es_toi_pg.2006), c(1, 7:9)]
+es0407 <- estoipg[!is.na(estoipg$es_toi_pg.2004) &
+                            !is.na(estoipg$es_toi_pg.2006) &
+                            !is.na(estoipg$es_toi_pg.2007), c(1, 8:10)]
+es0608 <- estoipg[!is.na(estoipg$es_toi_pg.2006) &
+                            !is.na(estoipg$es_toi_pg.2007) &
+                            !is.na(estoipg$es_toi_pg.2008), c(1, 9:11)]
+es0709 <- estoipg[!is.na(estoipg$es_toi_pg.2007) &
+                            !is.na(estoipg$es_toi_pg.2008) &
+                            !is.na(estoipg$es_toi_pg.2009), c(1, 10:12)]
+es0810 <- estoipg[!is.na(estoipg$es_toi_pg.2008) &
+                            !is.na(estoipg$es_toi_pg.2009) &
+                            !is.na(estoipg$es_toi_pg.2010), c(1, 11:13)]
+es0911 <- estoipg[!is.na(estoipg$es_toi_pg.2009) &
+                            !is.na(estoipg$es_toi_pg.2010) &
+                            !is.na(estoipg$es_toi_pg.2011), c(1, 12:14)]
+es1012 <- estoipg[!is.na(estoipg$es_toi_pg.2010) &
+                            !is.na(estoipg$es_toi_pg.2011) &
+                            !is.na(estoipg$es_toi_pg.2012), c(1, 13:15)]
+es1113 <- estoipg[!is.na(estoipg$es_toi_pg.2011) &
+                            !is.na(estoipg$es_toi_pg.2012) &
+                            !is.na(estoipg$es_toi_pg.2013), c(1, 14:16)]
+es1214 <- estoipg[!is.na(estoipg$es_toi_pg.2012) &
+                            !is.na(estoipg$es_toi_pg.2013) &
+                            !is.na(estoipg$es_toi_pg.2014), c(1, 15:17)]
+fit2000 <- lm(es_toi_pg.2000 ~ es_toi_pg.1999 +
+                 es_toi_pg.1998, data = es9800)
+fit2001 <- lm(es_toi_pg.2001 ~ es_toi_pg.2000 +
+                 es_toi_pg.1999, data = es9901)
+fit2002 <- lm(es_toi_pg.2002 ~ es_toi_pg.2001 +
+                 es_toi_pg.2000, data = es0002)
+fit2003 <- lm(es_toi_pg.2003 ~ es_toi_pg.2002 +
+                 es_toi_pg.2001, data = es0103)
+fit2004 <- lm(es_toi_pg.2004 ~ es_toi_pg.2003 +
+                 es_toi_pg.2002, data = es0204)
+fit2006 <- lm(es_toi_pg.2006 ~ es_toi_pg.2004 +
+                 es_toi_pg.2003, data = es0306)
+fit2007 <- lm(es_toi_pg.2007 ~ es_toi_pg.2006 +
+                 es_toi_pg.2004, data = es0407)
+fit2008 <- lm(es_toi_pg.2008 ~ es_toi_pg.2007 +
+                 es_toi_pg.2006, data = es0608)
+fit2009 <- lm(es_toi_pg.2009 ~ es_toi_pg.2008 +
+                 es_toi_pg.2007, data = es0709)
+fit2010 <- lm(es_toi_pg.2010 ~ es_toi_pg.2009 +
+                 es_toi_pg.2008, data = es0810)
+fit2011 <- lm(es_toi_pg.2011 ~ es_toi_pg.2010 +
+                 es_toi_pg.2009, data = es0911)
+fit2012 <- lm(es_toi_pg.2012 ~ es_toi_pg.2011 +
+                 es_toi_pg.2010, data = es1012)
+fit2013 <- lm(es_toi_pg.2013 ~ es_toi_pg.2012 +
+                 es_toi_pg.2011, data = es1113)
+escoeffs <- rbind(fit2000$coef, fit2001$coef, fit2002$coef, 
+                fit2003$coef, fit2004$coef, fit2006$coef, 
+                fit2007$coef, fit2008$coef, fit2009$coef, 
+                fit2010$coef, fit2011$coef, fit2012$coef, fit2013$coef)
+escoeffs <- rbind(escoeffs, colMeans(escoeffs))
+rownames(escoeffs) <- c("98-00", "99-01", "00-02", "01-03", "02-04",
+                       "03-06", "04-07", "06-08", "07-09", "08-10",
+                       "09-11", "10-12", "11-13", "es_means")
+colnames(escoeffs) <- c("baseline", "season n-1", "season n-2")
+escoeffs[14, ]
+```
+
+We repeat the above analysis (but continue to hide the code for brevity) for power play and short-handed TOI.  
+
+```{r, echo=FALSE}
+pp9800 <- pptoipg[!is.na(pptoipg$pp_toi_pg.1998) &
+                            !is.na(pptoipg$pp_toi_pg.1999) &
+                            !is.na(pptoipg$pp_toi_pg.2000), 1:4]
+pp9901 <- pptoipg[!is.na(pptoipg$pp_toi_pg.1999) &
+                            !is.na(pptoipg$pp_toi_pg.2000) &
+                            !is.na(pptoipg$pp_toi_pg.2001), c(1, 3:5)]
+pp0002 <- pptoipg[!is.na(pptoipg$pp_toi_pg.2000) &
+                            !is.na(pptoipg$pp_toi_pg.2001) &
+                            !is.na(pptoipg$pp_toi_pg.2002), c(1, 4:6)]
+pp0103 <- pptoipg[!is.na(pptoipg$pp_toi_pg.2001) &
+                            !is.na(pptoipg$pp_toi_pg.2002) &
+                            !is.na(pptoipg$pp_toi_pg.2003), c(1, 5:7)]
+pp0204 <- pptoipg[!is.na(pptoipg$pp_toi_pg.2002) &
+                            !is.na(pptoipg$pp_toi_pg.2003) &
+                            !is.na(pptoipg$pp_toi_pg.2004), c(1, 6:8)]
+pp0306 <- pptoipg[!is.na(pptoipg$pp_toi_pg.2003) &
+                            !is.na(pptoipg$pp_toi_pg.2004) &
+                            !is.na(pptoipg$pp_toi_pg.2006), c(1, 7:9)]
+pp0407 <- pptoipg[!is.na(pptoipg$pp_toi_pg.2004) &
+                            !is.na(pptoipg$pp_toi_pg.2006) &
+                            !is.na(pptoipg$pp_toi_pg.2007), c(1, 8:10)]
+pp0608 <- pptoipg[!is.na(pptoipg$pp_toi_pg.2006) &
+                            !is.na(pptoipg$pp_toi_pg.2007) &
+                            !is.na(pptoipg$pp_toi_pg.2008), c(1, 9:11)]
+pp0709 <- pptoipg[!is.na(pptoipg$pp_toi_pg.2007) &
+                            !is.na(pptoipg$pp_toi_pg.2008) &
+                            !is.na(pptoipg$pp_toi_pg.2009), c(1, 10:12)]
+pp0810 <- pptoipg[!is.na(pptoipg$pp_toi_pg.2008) &
+                            !is.na(pptoipg$pp_toi_pg.2009) &
+                            !is.na(pptoipg$pp_toi_pg.2010), c(1, 11:13)]
+pp0911 <- pptoipg[!is.na(pptoipg$pp_toi_pg.2009) &
+                            !is.na(pptoipg$pp_toi_pg.2010) &
+                            !is.na(pptoipg$pp_toi_pg.2011), c(1, 12:14)]
+pp1012 <- pptoipg[!is.na(pptoipg$pp_toi_pg.2010) &
+                            !is.na(pptoipg$pp_toi_pg.2011) &
+                            !is.na(pptoipg$pp_toi_pg.2012), c(1, 13:15)]
+pp1113 <- pptoipg[!is.na(pptoipg$pp_toi_pg.2011) &
+                            !is.na(pptoipg$pp_toi_pg.2012) &
+                            !is.na(pptoipg$pp_toi_pg.2013), c(1, 14:16)]
+pp1214 <- pptoipg[!is.na(pptoipg$pp_toi_pg.2012) &
+                            !is.na(pptoipg$pp_toi_pg.2013) &
+                            !is.na(pptoipg$pp_toi_pg.2014), c(1, 15:17)]
+fit2000 <- lm(pp_toi_pg.2000 ~ pp_toi_pg.1999 +
+                 pp_toi_pg.1998, data = pp9800)
+fit2001 <- lm(pp_toi_pg.2001 ~ pp_toi_pg.2000 +
+                 pp_toi_pg.1999, data = pp9901)
+fit2002 <- lm(pp_toi_pg.2002 ~ pp_toi_pg.2001 +
+                 pp_toi_pg.2000, data = pp0002)
+fit2003 <- lm(pp_toi_pg.2003 ~ pp_toi_pg.2002 +
+                 pp_toi_pg.2001, data = pp0103)
+fit2004 <- lm(pp_toi_pg.2004 ~ pp_toi_pg.2003 +
+                 pp_toi_pg.2002, data = pp0204)
+fit2006 <- lm(pp_toi_pg.2006 ~ pp_toi_pg.2004 +
+                 pp_toi_pg.2003, data = pp0306)
+fit2007 <- lm(pp_toi_pg.2007 ~ pp_toi_pg.2006 +
+                 pp_toi_pg.2004, data = pp0407)
+fit2008 <- lm(pp_toi_pg.2008 ~ pp_toi_pg.2007 +
+                 pp_toi_pg.2006, data = pp0608)
+fit2009 <- lm(pp_toi_pg.2009 ~ pp_toi_pg.2008 +
+                 pp_toi_pg.2007, data = pp0709)
+fit2010 <- lm(pp_toi_pg.2010 ~ pp_toi_pg.2009 +
+                 pp_toi_pg.2008, data = pp0810)
+fit2011 <- lm(pp_toi_pg.2011 ~ pp_toi_pg.2010 +
+                 pp_toi_pg.2009, data = pp0911)
+fit2012 <- lm(pp_toi_pg.2012 ~ pp_toi_pg.2011 +
+                 pp_toi_pg.2010, data = pp1012)
+fit2013 <- lm(pp_toi_pg.2013 ~ pp_toi_pg.2012 +
+                 pp_toi_pg.2011, data = pp1113)
+ppcoeffs <- rbind(fit2000$coef, fit2001$coef, fit2002$coef, 
+                fit2003$coef, fit2004$coef, fit2006$coef, 
+                fit2007$coef, fit2008$coef, fit2009$coef, 
+                fit2010$coef, fit2011$coef, fit2012$coef, fit2013$coef)
+ppcoeffs <- rbind(ppcoeffs, colMeans(ppcoeffs))
+rownames(ppcoeffs) <- c("98-00", "99-01", "00-02", "01-03", "02-04",
+                       "03-06", "04-07", "06-08", "07-09", "08-10",
+                       "09-11", "10-12", "11-13", "pp_means")
+colnames(ppcoeffs) <- c("baseline", "season n-1", "season n-2")
+ppcoeffs[14, ]
+```
+
+```{r, echo=FALSE}
+sh9800 <- shtoipg[!is.na(shtoipg$sh_toi_pg.1998) &
+                            !is.na(shtoipg$sh_toi_pg.1999) &
+                            !is.na(shtoipg$sh_toi_pg.2000), 1:4]
+sh9901 <- shtoipg[!is.na(shtoipg$sh_toi_pg.1999) &
+                            !is.na(shtoipg$sh_toi_pg.2000) &
+                            !is.na(shtoipg$sh_toi_pg.2001), c(1, 3:5)]
+sh0002 <- shtoipg[!is.na(shtoipg$sh_toi_pg.2000) &
+                            !is.na(shtoipg$sh_toi_pg.2001) &
+                            !is.na(shtoipg$sh_toi_pg.2002), c(1, 4:6)]
+sh0103 <- shtoipg[!is.na(shtoipg$sh_toi_pg.2001) &
+                            !is.na(shtoipg$sh_toi_pg.2002) &
+                            !is.na(shtoipg$sh_toi_pg.2003), c(1, 5:7)]
+sh0204 <- shtoipg[!is.na(shtoipg$sh_toi_pg.2002) &
+                            !is.na(shtoipg$sh_toi_pg.2003) &
+                            !is.na(shtoipg$sh_toi_pg.2004), c(1, 6:8)]
+sh0306 <- shtoipg[!is.na(shtoipg$sh_toi_pg.2003) &
+                            !is.na(shtoipg$sh_toi_pg.2004) &
+                            !is.na(shtoipg$sh_toi_pg.2006), c(1, 7:9)]
+sh0407 <- shtoipg[!is.na(shtoipg$sh_toi_pg.2004) &
+                            !is.na(shtoipg$sh_toi_pg.2006) &
+                            !is.na(shtoipg$sh_toi_pg.2007), c(1, 8:10)]
+sh0608 <- shtoipg[!is.na(shtoipg$sh_toi_pg.2006) &
+                            !is.na(shtoipg$sh_toi_pg.2007) &
+                            !is.na(shtoipg$sh_toi_pg.2008), c(1, 9:11)]
+sh0709 <- shtoipg[!is.na(shtoipg$sh_toi_pg.2007) &
+                            !is.na(shtoipg$sh_toi_pg.2008) &
+                            !is.na(shtoipg$sh_toi_pg.2009), c(1, 10:12)]
+sh0810 <- shtoipg[!is.na(shtoipg$sh_toi_pg.2008) &
+                            !is.na(shtoipg$sh_toi_pg.2009) &
+                            !is.na(shtoipg$sh_toi_pg.2010), c(1, 11:13)]
+sh0911 <- shtoipg[!is.na(shtoipg$sh_toi_pg.2009) &
+                            !is.na(shtoipg$sh_toi_pg.2010) &
+                            !is.na(shtoipg$sh_toi_pg.2011), c(1, 12:14)]
+sh1012 <- shtoipg[!is.na(shtoipg$sh_toi_pg.2010) &
+                            !is.na(shtoipg$sh_toi_pg.2011) &
+                            !is.na(shtoipg$sh_toi_pg.2012), c(1, 13:15)]
+sh1113 <- shtoipg[!is.na(shtoipg$sh_toi_pg.2011) &
+                            !is.na(shtoipg$sh_toi_pg.2012) &
+                            !is.na(shtoipg$sh_toi_pg.2013), c(1, 14:16)]
+sh1214 <- shtoipg[!is.na(shtoipg$sh_toi_pg.2012) &
+                            !is.na(shtoipg$sh_toi_pg.2013) &
+                            !is.na(shtoipg$sh_toi_pg.2014), c(1, 15:17)]
+fit2000 <- lm(sh_toi_pg.2000 ~ sh_toi_pg.1999 +
+                 sh_toi_pg.1998, data = sh9800)
+fit2001 <- lm(sh_toi_pg.2001 ~ sh_toi_pg.2000 +
+                 sh_toi_pg.1999, data = sh9901)
+fit2002 <- lm(sh_toi_pg.2002 ~ sh_toi_pg.2001 +
+                 sh_toi_pg.2000, data = sh0002)
+fit2003 <- lm(sh_toi_pg.2003 ~ sh_toi_pg.2002 +
+                 sh_toi_pg.2001, data = sh0103)
+fit2004 <- lm(sh_toi_pg.2004 ~ sh_toi_pg.2003 +
+                 sh_toi_pg.2002, data = sh0204)
+fit2006 <- lm(sh_toi_pg.2006 ~ sh_toi_pg.2004 +
+                 sh_toi_pg.2003, data = sh0306)
+fit2007 <- lm(sh_toi_pg.2007 ~ sh_toi_pg.2006 +
+                 sh_toi_pg.2004, data = sh0407)
+fit2008 <- lm(sh_toi_pg.2008 ~ sh_toi_pg.2007 +
+                 sh_toi_pg.2006, data = sh0608)
+fit2009 <- lm(sh_toi_pg.2009 ~ sh_toi_pg.2008 +
+                 sh_toi_pg.2007, data = sh0709)
+fit2010 <- lm(sh_toi_pg.2010 ~ sh_toi_pg.2009 +
+                 sh_toi_pg.2008, data = sh0810)
+fit2011 <- lm(sh_toi_pg.2011 ~ sh_toi_pg.2010 +
+                 sh_toi_pg.2009, data = sh0911)
+fit2012 <- lm(sh_toi_pg.2012 ~ sh_toi_pg.2011 +
+                 sh_toi_pg.2010, data = sh1012)
+fit2013 <- lm(sh_toi_pg.2013 ~ sh_toi_pg.2012 +
+                 sh_toi_pg.2011, data = sh1113)
+shcoeffs <- rbind(fit2000$coef, fit2001$coef, fit2002$coef, 
+                fit2003$coef, fit2004$coef, fit2006$coef, 
+                fit2007$coef, fit2008$coef, fit2009$coef, 
+                fit2010$coef, fit2011$coef, fit2012$coef, fit2013$coef)
+shcoeffs <- rbind(shcoeffs, colMeans(shcoeffs))
+rownames(shcoeffs) <- c("98-00", "99-01", "00-02", "01-03", "02-04",
+                       "03-06", "04-07", "06-08", "07-09", "08-10",
+                       "09-11", "10-12", "11-13", "sh_means")
+colnames(shcoeffs) <- c("baseline", "season n-1", "season n-2")
+shcoeffs[14, ]
+```
+
+We let $x$, $y$ and $z$ represent situational TOI in seasons $n$, $n-1$ and $n-2$, respectively.  Choosing some legible coefficients, we now have the following models:
+
+$$x_{es} \sim 75 + \frac{7}{10}y_{es} + \frac{1}{5}z_{es}$$
+$$x_{pp} \sim 9 + \frac{13}{20}y_{pp} + \frac{1}{5}z_{pp}$$
+$$x_{sh} \sim 18 + \frac{13}{20}y_{sh} + \frac{3}{20}z_{sh}$$
+
+## Evaluation
+
+Let's try to use these models to predict TOI for 2014.
+
+```{r, echo=FALSE}
+es1214$es_toi_pg.predicted <- 75 + 7/10 * es1214$es_toi_pg.2013 + 
+      1/5 * es1214$es_toi_pg.2012
+plot(I(es_toi_pg.predicted - es_toi_pg.2014) ~ es_toi_pg.2013, data = es1214,
+     main = "Residuals of Our Even Strength TOI Model",
+     xlab = "2013 ES TOI (seconds)", ylab = "Residuals (seconds)")
+```
+
+```{r, echo=FALSE}
+pp1214$pp_toi_pg.predicted <- 9 + 13/20 * pp1214$pp_toi_pg.2013 + 
+      1/5 * pp1214$pp_toi_pg.2012
+plot(I(pp_toi_pg.predicted - pp_toi_pg.2014) ~ pp_toi_pg.2013, data = pp1214,
+     main = "Residuals of Our Power Play TOI Model",
+     xlab = "2013 PP TOI (seconds)", ylab = "Residuals (seconds)")
+```
+
+```{r, echo=FALSE}
+sh1214$sh_toi_pg.predicted <- 18 + 13/20 * sh1214$sh_toi_pg.2013 + 
+      3/20 * sh1214$sh_toi_pg.2012
+plot(I(sh_toi_pg.predicted - sh_toi_pg.2014) ~ sh_toi_pg.2013, data = sh1214,
+     main = "Residuals of Our Short-Handed TOI Model",
+     xlab = "2013 SH TOI (seconds)", ylab = "Residuals (seconds)")
+```
+
+Looks like Darren Helm himself one crazy game in 2013.

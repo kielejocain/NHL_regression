@@ -35,7 +35,7 @@ gp9802 <- skatergames[!is.na(skatergames$games_played.1998) &
 pairs(gp9802[, 2:6])
 ```
 
-![plot of chunk unnamed-chunk-2](./Predict_GP_files/figure-html/unnamed-chunk-2.png) 
+![plot of chunk unnamed-chunk-2](Predict_GP_files/figure-html/unnamed-chunk-2.png) 
 
 Now we will fit a few linear regressions, adding progressively older seasons' data as new regressors.  We can then run an analysis of variance to see if we are still getting any gains from each successively older season.
 
@@ -107,12 +107,24 @@ Let's use the model to "predict" games played in 2014 and compare it to reality 
 
 ```r
 gp1214$gp.predicted <- 73 - 4/9 * (82 - gp1214$games_played.2013) - 
-      3/20 * (82 - gp1214$games_played.2014)
-plot(I(gp.predicted - games_played.2014) ~ games_played.2013, data = gp1214,
-     main = "Residuals of Our Games Played Regression Model",
-     xlab = "2013 Games Played", ylab = "Residuals")
+      3/20 * (82 - gp1214$games_played.2012)
+cor(gp1214$gp.predicted, gp1214$games_played.2014); cor(gp1214$gp.predicted, gp1214$games_played.2014)^2
 ```
 
-![plot of chunk unnamed-chunk-5](./Predict_GP_files/figure-html/unnamed-chunk-5.png) 
+```
+## [1] 0.5695
+```
+
+```
+## [1] 0.3244
+```
+
+```r
+plot(I(gp.predicted - games_played.2014) ~ games_played.2014, data = gp1214,
+     main = "Residuals of Our Games Played Regression Model",
+     xlab = "2014 Games Played", ylab = "Residuals")
+```
+
+![plot of chunk unnamed-chunk-5](Predict_GP_files/figure-html/unnamed-chunk-5.png) 
 
 Obivously these data are massively noisy, and much variance remains unexplained.  Rather than try to tease further through such a hideous data set, we'll use this admittedly specious model until we retrieve our game-by-game data; at that point, classifying games missed by healthy or unhealthy should go a long way toward zeroing in on some signal.

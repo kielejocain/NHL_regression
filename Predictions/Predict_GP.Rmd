@@ -1,9 +1,7 @@
 ---
 title: "Predicting Games Played"
 author: "Kyle Joecken"
-output:
-      html_document:
-            keep_md: true
+output: pdf_document
 ---
 
 Injuries: The bane of any promising fantasy season.
@@ -18,11 +16,12 @@ In particular, the hope is that games played for various players in their more r
 
 First, we load the data from our local (scraped) database of season-wide NHL data.  It is stored in a data frame called `skaterstats`.
 
-```{r, echo=FALSE, results='hide', include=FALSE}
+```{r, echo=FALSE, results='hide', message=FALSE}
 library(RPostgreSQL)
 driv <- dbDriver("PostgreSQL")
 conn <- dbConnect(driv, dbname = "nhltest", user = "postgres", password = "hollyleaf", host = "localhost")
-rs <- dbSendQuery(conn, statement = "SELECT * FROM skaterstats;")
+rs <- dbSendQuery(conn, statement = "SELECT * FROM skaterstats
+                  ORDER BY season, nhl_num;")
 skaterstats <- fetch(rs, n = -1)
 dbClearResult(rs)
 dbDisconnect(conn)
@@ -160,10 +159,12 @@ Let's use the model to "predict" games played in 2014 and compare it to reality 
 
 ```{r}
 gp1214$gp.predicted <- 73 - 4/9 * (82 - gp1214$games_played.2013) - 
-      3/20 * (82 - gp1214$games_played.2014)
-plot(I(gp.predicted - games_played.2014) ~ games_played.2013, data = gp1214,
+      3/20 * (82 - gp1214$games_played.2012)
+cor(gp1214$gp.predicted, gp1214$games_played.2014)
+cor(gp1214$gp.predicted, gp1214$games_played.2014)^2
+plot(I(gp.predicted - games_played.2014) ~ games_played.2014, data = gp1214,
      main = "Residuals of Our Games Played Regression Model",
-     xlab = "2013 Games Played", ylab = "Residuals")
+     xlab = "2014 Games Played", ylab = "Residuals")
 ```
 
 Obivously these data are massively noisy, and much variance remains unexplained.  Rather than try to tease further through such a hideous data set, we'll use this admittedly specious model until we retrieve our game-by-game data; at that point, classifying games missed by healthy or unhealthy should go a long way toward zeroing in on some signal.
