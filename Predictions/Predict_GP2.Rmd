@@ -46,19 +46,21 @@ at this [link](https://github.com/kielejocain/NHL_sql).
 
 ## Features
 
-In order to predict games played in 2014, we'll need to first decide what our
-predictors are.  Let's take all players with games played in each of the 2012,
-2014 seasons and use `varimpplot()` on a random forest model to select
-predictors.  We'll also throw away team information (columns 3 - 5) and shootout
-information (38 - 41), as both are incomplete and the former is unlikely to be
-relevant.
+We'll use statistics from the previous two seasons to try and predict games played.
+To train the model, we will take all our data from 2012 and 2013 and try
+to find the most applicable variables to modeling games played in 2014.
+
+First, we need to finish wrangling the data into a form we can put into various
+models.  We need to drop all data pertaining to seasons before 2012, drop incomplete
+or irrelevant variables, then reshape the data so that there is only one observation
+per player.
 
 ```{r}
 skaterstats <- subset(skaterstats, season > 2011)     # shed old data
 skaterstats <- skaterstats[, -c(3:5, 38:41)]          # drop team/SO variables
-skaterstats <- reshape(skaterstats, timevar = "season",
+widestats <- reshape(skaterstats, timevar = "season",
                        idvar = "nhl_num", direction = "wide")
-skaterstats <- skaterstats[, -(81:118)]               # drop non-GP 2014 vars
+widestats <- widestats[, -(81:118)]               # drop non-GP 2014 vars
 ```
 
 We'd also like to add a simplified age to the computation (`2014 - birthyear`).
@@ -68,26 +70,69 @@ library(lubridate)
 skaters <- skaters[, c(3,5)]                    # grab nhl_num, birthday
 skaters$age <- 2014 - year(skaters$birthday)    # compute "age"
 skaters <- skaters[, -2]                        # drop birthday
-skaters <- merge(skaters, skaterstats)[, -1]    # merge along/drop nhl_num
+data <- merge(skaters, widestats)[, -1]    # merge along/drop nhl_num
 ```
 
 Finally, we reduce our collection of 1175 NHL skaters (for now) down to the set
 that played in all three of the last few seasons.
 
 ```{r}
-data <- skaters[!is.na(skaters$games_played.2012) & 
-                      !is.na(skaters$games_played.2013) &
-                      !is.na(skaters$games_played.2014), ]
+data <- data[!is.na(data$games_played.2012) & 
+                      !is.na(data$games_played.2013) &
+                      !is.na(data$games_played.2014), ]
 ```
 
-We build our model on the remaining 611 skaters.
+We first build a naive random forest model built on all variables, then ask it
+which variables it found important.  We will try and pare down predictors
+intelligently from the output.
 
-```{r, cache=TRUE, message=FALSE, warning=FALSE, fig.height=6}
+We define a training set on 60% of the data, with a two-tier training set on 
+which to cross-validate.
+
+```{r, message=FALSE, warning=FALSE, fig.height=6}
 library(caret)
 library(randomForest)
-testMod <- randomForest(games_played.2014 ~ ., data = data, importance = TRUE)
+set.seed(485)
+inTest <- createDataPartition(data$games_played.2014, p = .2, list = FALSE)
+testing  <- data[inTest, ]
+building <- data[-inTest, ]
+inTrain <- createDataPartition(building$games_played.2014, p = .75, list = FALSE)
+training <- building[inTrain, ]
+checking <- building[-inTrain, ]
+testMod <- randomForest(games_played.2014 ~ ., data = training, importance = TRUE)
 print(testMod)
 varImpPlot(testMod)
 ```
 
+Through several iterations of modelling these data, shots and missed shots are
+at the top of every list.  Various iterations of situational time on ice,
+giveaways, takeaways, and points also frequently appear. As such, we'll tentatively
+select these predictors and throw in our pet variable age for another look.  We will
+also restrict ourselves to 2013 to increase generalizability of our model.
 
+We reframe the data to pare down the predictors further and see where we are.
+
+```{r}
+skaterstats <- subset(skaterstats, season > 2012)
+skaterstats <- skaterstats[, c(1:3, 6, 15, 30:32, 38:40)] # pare down predictors
+widestats <- reshape(skaterstats, timevar = "season",
+                       idvar = "nhl_num", direction = "wide")
+widestats <- widestats[, -(12:19)]
+data <- merge(skaters, widestats)[, -1]
+data <- data[!is.na(data$games_played.2013) & !is.na(data$games_played.2014), ]
+```
+
+We now build a random forest model as before and have a look at importance.
+
+```{r, message=FALSE, warning=FALSE, fig.height=6}
+set.seed(2857)
+inTest <- createDataPartition(data$games_played.2014, p = .2, list = FALSE)
+testing  <- data[inTest, ]
+building <- data[-inTest, ]
+inTrain <- createDataPartition(building$games_played.2014, p = .75, list = FALSE)
+training <- building[inTrain, ]
+checking <- building[-inTrain, ]
+testMod2 <- randomForest(games_played.2014 ~ ., data = training, importance = TRUE)
+print(testMod2)
+varImpPlot(testMod2)
+```
