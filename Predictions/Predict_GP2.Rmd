@@ -4,6 +4,11 @@ author: "Kyle Joecken"
 output: pdf_document
 ---
 
+```{r, include = FALSE}
+library(knitr)
+opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
 Injuries: The bane of any promising fantasy season.
 
 ## Question
@@ -23,7 +28,7 @@ Surely there is some small signal for which we can search.
 First, we load the data from our local (scraped) database of season-wide NHL
 data.  It is stored in a data frame called `skaterstats`.
 
-```{r, echo=FALSE, results='hide', message=FALSE}
+```{r, echo=FALSE, results='hide'}
 library(doMC)
 registerDoMC(4)
 library(RPostgreSQL)
@@ -89,7 +94,7 @@ intelligently from the output.
 We define a training set on 60% of the data, with a two-tier training set on 
 which to cross-validate.
 
-```{r, message=FALSE, warning=FALSE, fig.height=6}
+```{r, fig.height=6}
 library(caret)
 library(randomForest)
 set.seed(485)
@@ -124,7 +129,7 @@ data <- data[!is.na(data$games_played.2013) & !is.na(data$games_played.2014), ]
 
 We now build a random forest model as before and have a look at importance.
 
-```{r, message=FALSE, warning=FALSE, fig.height=6}
+```{r}
 set.seed(2857)
 inTest <- createDataPartition(data$games_played.2014, p = .2, list = FALSE)
 testing  <- data[inTest, ]
@@ -136,3 +141,32 @@ testMod2 <- randomForest(games_played.2014 ~ ., data = training, importance = TR
 print(testMod2)
 varImpPlot(testMod2)
 ```
+
+And now one more time without age, to see if it is worth keeping.
+
+```{r}
+data2 <- widestats[!is.na(widestats$games_played.2013) &
+                         !is.na(widestats$games_played.2014), -1]
+inTest2 <- createDataPartition(data2$games_played.2014, p = .2, list = FALSE)
+testing2  <- data2[inTest2, ]
+building2 <- data2[-inTest2, ]
+inTrain2 <- createDataPartition(building2$games_played.2014, p = .75, list = FALSE)
+training2 <- building2[inTrain2, ]
+checking2 <- building2[-inTrain2, ]
+testMod3 <- randomForest(games_played.2014 ~ ., data = training2, importance = TRUE)
+print(testMod3)
+varImpPlot(testMod3)
+```
+
+Let's let the two models predict their respective testing sets.
+
+```{r}
+testout <- predict(testMod2, testing)
+testout2 <- predict(testMod3, testing2)
+cor(testout, testing$games_played.2014)
+cor(testout, testing$games_played.2014)^2
+cor(testout2, testing2$games_played.2014)
+cor(testout2, testing2$games_played.2014)^2
+```
+
+Dropping the `age` predictor seems likely to be best.
