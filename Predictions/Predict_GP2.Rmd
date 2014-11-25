@@ -26,147 +26,191 @@ Surely there is some small signal for which we can search.
 ## Data
 
 First, we load the data from our local (scraped) database of season-wide NHL
-data.  It is stored in a data frame called `skaterstats`.
+data.  It is stored in a data frame called `skaterstats`.  We also import a few
+purpose-built functions to help wrangle the data and build our model.
 
-```{r, echo=FALSE, results='hide'}
-library(doMC)
-registerDoMC(4)
-library(RPostgreSQL)
-driv <- dbDriver("PostgreSQL")
-conn <- dbConnect(driv, dbname = "nhltest", user = "postgres", password = "hollyleaf", host = "localhost")
-rs <- dbSendQuery(conn, statement = "SELECT * FROM skaterstats
-                  ORDER BY season, nhl_num;")
-skaterstats <- fetch(rs, n = -1)
-dbClearResult(rs)
-rs <- dbSendQuery(conn, statement = "SELECT * FROM skaters
-                  ORDER BY nhl_num;")
-skaters <- fetch(rs, n = -1)
-dbClearResult(rs)
-dbDisconnect(conn)
+```{r, results='hide', echo=FALSE}
+source('~/workspace/NHL_regression/R/setup.R')
 ```
 
 The data was scraped from the NHL.com statistics pages by a Python script using
 the Scrapy framework; the relevant script and a `CODEBOOK.md` file can be found
 at this [link](https://github.com/kielejocain/NHL_sql).
 
-## Features
+## Feature Selection
 
 We'll use statistics from the previous two seasons to try and predict games played.
-To train the model, we will take all our data from 2012 and 2013 and try
-to find the most applicable variables to modeling games played in 2014.
+We will intelligently select features from both random forest and boosting models
+built on all available predictors and consider various importance statistics
+over a few iterations of the models.  As we want our model to be as generalizable
+as possible, we will build the random forest model using only the previous
+season's data, while the boosting model will use the previous two seasons (as
+incomplete observations can still be fed to a boosting model).
 
 First, we need to finish wrangling the data into a form we can put into various
 models.  We need to drop all data pertaining to seasons before 2012, drop incomplete
 or irrelevant variables, then reshape the data so that there is only one observation
-per player.
+per player.  We'll then build a naive random forest model based on all predictors
+and look for factors that are consistently important.
+
+Note that based on the way the `nhlShape()` function shapes the data, the number
+after the predictor tells how many seasons prior to the predicted season the
+data describes (*e.g.*, `games_played.1` is the number of games played in the
+previous season).
 
 ```{r}
-skaterstats <- subset(skaterstats, season > 2011)     # shed old data
 skaterstats <- skaterstats[, -c(3:5, 38:41)]          # drop team/SO variables
-widestats <- reshape(skaterstats, timevar = "season",
-                       idvar = "nhl_num", direction = "wide")
-widestats <- widestats[, -(81:118)]               # drop non-GP 2014 vars
+gbmdata <- nhlShape(2012, 2013, outcome = 3)
+rfdata <- nhlShape(2013, 2013, outcome = 3)
 ```
 
-We'd also like to add a simplified age to the computation (`2014 - birthyear`).
+First, we build random forest models from several seeds.
+
+```{r, cache=TRUE}
+gprfmod1 <- nhlBuild(data = rfdata, perc = 0.7, seed = 9112)
+gprfmod2 <- nhlBuild(data = rfdata, perc = 0.7, seed = 2857)
+gprfmod3 <- nhlBuild(data = rfdata, perc = 0.7, seed = 31415)
+gprfmod4 <- nhlBuild(data = rfdata, perc = 0.7, seed = 28182)
+```
+
+```{r, echo=FALSE}
+varImpPlot(gprfmod1)
+varImpPlot(gprfmod2)
+varImpPlot(gprfmod3)
+varImpPlot(gprfmod4)
+```
+
+Several predictors make repeat appearances; these can be broken down into a few
+distinct categories:
+
+1. **Offense created:** `shots`, `missed_shots`, `shot_pct`, `team_goals_for`, `points`
+2. **Coaching trust:** `*toi`, `ot_games_played`
+3. **Possession:** `giveaways`, `takeaways`
+4. **Physicality:** `hits`, `penalty_minutes`, `majors`, `minors`
+
+These 16 predictors consistently show as valuable analytically and pass a
+basic smell test; we will look to confirm or confound their importance by 
+constructing a few boosting models and looking for similar patterns.
+
+```{r, cache=TRUE, results='hide'}
+gpgbmmod1 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 9112)
+gpgbmmod2 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 2857)
+gpgbmmod3 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 31415)
+gpgbmmod4 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 28182)
+```
+
+```{r, echo=FALSE}
+sum1 <- as.data.frame(summary(gpgbmmod1, plotit=FALSE))
+sum2 <- as.data.frame(summary(gpgbmmod2, plotit=FALSE))
+sum3 <- as.data.frame(summary(gpgbmmod3, plotit=FALSE))
+sum4 <- as.data.frame(summary(gpgbmmod4, plotit=FALSE))
+sum <- merge(sum1, sum2, by = 1)
+names(sum) <- c("var", "var.inf.1", "var.inf.2")
+sum <- merge(sum, sum3, by = 1)
+names(sum)[4] <- "var.inf.3"
+sum <- merge(sum, sum4, by = 1)
+names(sum)[5] <- "var.inf.4"
+sum$var.inf.tot <- sum$var.inf.1 + sum$var.inf.2 + sum$var.inf.3 + sum$var.inf.4
+sum <- sum[order(sum$var.inf.tot, decreasing = TRUE), ]
+sumout <- sum[sum$var.inf.tot > 4, c(1, 6)]
+row.names(sumout) <- NULL
+print(sumout)
+```
+
+This aggregated summary shows that the same collection of predictors are present
+in the gbm model's list, with the exceptions of majors and giveaways.  We also 
+see a few new predictors appear, namely blocked shots, assists, and team goals
+against.  We will consider those predictors that do not appear toward the top
+of both models to be of a lower tier of importance.
+
+## Algorithm
+
+To build our model, we will first build random forest models on various subsets
+of the predictors, throwing in one of each of the lesser importance predictors
+and using only the previous season's data.  We will do the same with boosting
+models but with the previous two seasons' data.  Finally, we will build a model
+using the output of the other models as predictors to arrive at a consensus-type
+boosting model.
+
+First, we prepare the data sets.  Recall that our predictors are:
+
+1. **Tier 1:** `shots`, `missed_shots`, `shot_pct`, `team_goals_for`, `points`,
+`*toi*`, `ot_games_played`, `takeaways`, `hits`, `penalty_minutes`, `minors`
+2. **Tier 2:** `giveaways`, `majors`, `blocked_shots`, `assists`, `team_goals_against`
+
+We first proceed to set up the various data sets.
 
 ```{r}
-library(lubridate)
-skaters <- skaters[, c(3,5)]                    # grab nhl_num, birthday
-skaters$age <- 2014 - year(skaters$birthday)    # compute "age"
-skaters <- skaters[, -2]                        # drop birthday
-data <- merge(skaters, widestats)[, -1]    # merge along/drop nhl_num
+col1 <- c(1:3, 6, 8, 15:16, 19, 24, 28, 30, 32, 35, 38:41) # Tier 1 predictors
+col2 <- c(5, 20, 26, 29, 31)                               # Tier 2 predictors
+gpDataRF1 <- nhlShape(2013, 2013, cols = c(col1, col2[1]), outcome = 3, rm.nhlnum = F)
+gpDataRF2 <- nhlShape(2013, 2013, cols = c(col1, col2[2]), outcome = 3, rm.nhlnum = F)
+gpDataRF3 <- nhlShape(2013, 2013, cols = c(col1, col2[3]), outcome = 3, rm.nhlnum = F)
+gpDataRF4 <- nhlShape(2013, 2013, cols = c(col1, col2[4]), outcome = 3, rm.nhlnum = F)
+gpDataRF5 <- nhlShape(2013, 2013, cols = c(col1, col2[5]), outcome = 3, rm.nhlnum = F)
+gpDataRF6 <- nhlShape(2013, 2013, cols = c(col1, col2), outcome = 3, rm.nhlnum = F)
+gpDataGBM1 <- nhlShape(2012, 2013, cols = c(col1, col2[1]), outcome = 3,
+                       rm.nhlnum = F, rm.NA = FALSE)
+gpDataGBM1 <- subset(gpDataGBM1, !is.na(games_played.1))
+gpDataGBM2 <- nhlShape(2012, 2013, cols = c(col1, col2[2]), outcome = 3,
+                       rm.nhlnum = F, rm.NA = FALSE)
+gpDataGBM2 <- subset(gpDataGBM2, !is.na(games_played.1))
+gpDataGBM3 <- nhlShape(2012, 2013, cols = c(col1, col2[3]), outcome = 3,
+                       rm.nhlnum = F, rm.NA = FALSE)
+gpDataGBM3 <- subset(gpDataGBM3, !is.na(games_played.1))
+gpDataGBM4 <- nhlShape(2012, 2013, cols = c(col1, col2[4]), outcome = 3,
+                       rm.nhlnum = F, rm.NA = FALSE)
+gpDataGBM4 <- subset(gpDataGBM4, !is.na(games_played.1))
+gpDataGBM5 <- nhlShape(2012, 2013, cols = c(col1, col2[5]), outcome = 3,
+                       rm.nhlnum = F, rm.NA = FALSE)
+gpDataGBM5 <- subset(gpDataGBM5, !is.na(games_played.1))
+gpDataGBM6 <- nhlShape(2012, 2013, cols = c(col1, col2), outcome = 3,
+                       rm.nhlnum = F, rm.NA = FALSE)
+gpDataGBM6 <- subset(gpDataGBM6, !is.na(games_played.1))
 ```
 
-Finally, we reduce our collection of 1175 NHL skaters (for now) down to the set
-that played in all three of the last few seasons.
+Here are the lower level models.
+
+```{r, cache=TRUE}
+gprfmod1 <- nhlBuild(gpDataRF1[, -1], perc = 1, seed = 1512)
+gprfmod2 <- nhlBuild(gpDataRF2[, -1], perc = 1)
+gprfmod3 <- nhlBuild(gpDataRF3[, -1], perc = 1)
+gprfmod4 <- nhlBuild(gpDataRF4[, -1], perc = 1)
+gprfmod5 <- nhlBuild(gpDataRF5[, -1], perc = 1)
+gprfmod6 <- nhlBuild(gpDataRF6[, -1], perc = 1)
+gpgbmmod1 <- nhlBuild(gpDataGBM1[, -1], type = "gbm", perc = 1)
+gpgbmmod2 <- nhlBuild(gpDataGBM2[, -1], type = "gbm", perc = 1)
+gpgbmmod3 <- nhlBuild(gpDataGBM3[, -1], type = "gbm", perc = 1)
+gpgbmmod4 <- nhlBuild(gpDataGBM4[, -1], type = "gbm", perc = 1)
+gpgbmmod5 <- nhlBuild(gpDataGBM5[, -1], type = "gbm", perc = 1)
+gpgbmmod6 <- nhlBuild(gpDataGBM6[, -1], type = "gbm", perc = 1)
+```
+
+We now build a data set for the cumulative model.
 
 ```{r}
-data <- data[!is.na(data$games_played.2012) & 
-                      !is.na(data$games_played.2013) &
-                      !is.na(data$games_played.2014), ]
+gprf1 <- predict(gprfmod1, gpDataRF1)
+gprf2 <- predict(gprfmod2, gpDataRF2)
+gprf3 <- predict(gprfmod3, gpDataRF3)
+gprf4 <- predict(gprfmod4, gpDataRF4)
+gprf5 <- predict(gprfmod5, gpDataRF5)
+gprf6 <- predict(gprfmod6, gpDataRF6)
+gprf <- as.data.frame(cbind(gpDataRF1[, 1], gprf1, gprf2, gprf3, gprf4, gprf5, gprf6))
+names(gprf) <- c("nhl_num", "gprf1", "gprf2", "gprf3", "gprf4", "gprf5", "gprf6")
+gpgbm1 <- predict(gpgbmmod1, gpDataGBM1)
+gpgbm2 <- predict(gpgbmmod2, gpDataGBM2)
+gpgbm3 <- predict(gpgbmmod3, gpDataGBM3)
+gpgbm4 <- predict(gpgbmmod4, gpDataGBM4)
+gpgbm5 <- predict(gpgbmmod5, gpDataGBM5)
+gpgbm6 <- predict(gpgbmmod6, gpDataGBM6)
+gpgbm <- as.data.frame(cbind(gpDataGBM1[, 1], gpgbm1, gpgbm2, gpgbm3, gpgbm4, gpgbm5, gpgbm6))
+names(gpgbm) <- c("nhl_num", "gpgbm1", "gpgbm2", "gpgbm3", "gpgbm4", "gpgbm5", "gpgbm6")
+gpData <- merge(gprf, gpgbm, all = TRUE)
+gpData <- merge(gpData, gpDataGBM1[, c(1, 34)])
 ```
 
-We first build a naive random forest model built on all variables, then ask it
-which variables it found important.  We will try and pare down predictors
-intelligently from the output.
+Now we finally build a boosting model on the given data set.
 
-We define a training set on 60% of the data, with a two-tier training set on 
-which to cross-validate.
-
-```{r, fig.height=6}
-library(caret)
-library(randomForest)
-set.seed(485)
-inTest <- createDataPartition(data$games_played.2014, p = .2, list = FALSE)
-testing  <- data[inTest, ]
-building <- data[-inTest, ]
-inTrain <- createDataPartition(building$games_played.2014, p = .75, list = FALSE)
-training <- building[inTrain, ]
-checking <- building[-inTrain, ]
-testMod <- randomForest(games_played.2014 ~ ., data = training, importance = TRUE)
-print(testMod)
-varImpPlot(testMod)
+```{r, cache=TRUE}
+gpModel <- nhlBuild(gpData, type = "gbm", perc = 0.7, seed = 61616)
 ```
-
-Through several iterations of modelling these data, shots and missed shots are
-at the top of every list.  Various iterations of situational time on ice,
-giveaways, takeaways, and points also frequently appear. As such, we'll tentatively
-select these predictors and throw in our pet variable age for another look.  We will
-also restrict ourselves to 2013 to increase generalizability of our model.
-
-We reframe the data to pare down the predictors further and see where we are.
-
-```{r}
-skaterstats <- subset(skaterstats, season > 2012)
-skaterstats <- skaterstats[, c(1:3, 6, 15, 30:32, 38:40)] # pare down predictors
-widestats <- reshape(skaterstats, timevar = "season",
-                       idvar = "nhl_num", direction = "wide")
-widestats <- widestats[, -(12:19)]
-data <- merge(skaters, widestats)[, -1]
-data <- data[!is.na(data$games_played.2013) & !is.na(data$games_played.2014), ]
-```
-
-We now build a random forest model as before and have a look at importance.
-
-```{r}
-set.seed(2857)
-inTest <- createDataPartition(data$games_played.2014, p = .2, list = FALSE)
-testing  <- data[inTest, ]
-building <- data[-inTest, ]
-inTrain <- createDataPartition(building$games_played.2014, p = .75, list = FALSE)
-training <- building[inTrain, ]
-checking <- building[-inTrain, ]
-testMod2 <- randomForest(games_played.2014 ~ ., data = training, importance = TRUE)
-print(testMod2)
-varImpPlot(testMod2)
-```
-
-And now one more time without age, to see if it is worth keeping.
-
-```{r}
-data2 <- widestats[!is.na(widestats$games_played.2013) &
-                         !is.na(widestats$games_played.2014), -1]
-inTest2 <- createDataPartition(data2$games_played.2014, p = .2, list = FALSE)
-testing2  <- data2[inTest2, ]
-building2 <- data2[-inTest2, ]
-inTrain2 <- createDataPartition(building2$games_played.2014, p = .75, list = FALSE)
-training2 <- building2[inTrain2, ]
-checking2 <- building2[-inTrain2, ]
-testMod3 <- randomForest(games_played.2014 ~ ., data = training2, importance = TRUE)
-print(testMod3)
-varImpPlot(testMod3)
-```
-
-Let's let the two models predict their respective testing sets.
-
-```{r}
-testout <- predict(testMod2, testing)
-testout2 <- predict(testMod3, testing2)
-cor(testout, testing$games_played.2014)
-cor(testout, testing$games_played.2014)^2
-cor(testout2, testing2$games_played.2014)
-cor(testout2, testing2$games_played.2014)^2
-```
-
-Dropping the `age` predictor seems likely to be best.

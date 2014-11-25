@@ -1,0 +1,84 @@
+---
+title: "Predicting Games Played"
+author: "Kyle Joecken"
+output: pdf_document
+---
+
+```{r, include = FALSE}
+library(knitr)
+opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+## Question
+
+Can we use data from previous seasons to predict how much time a particular NHL
+skater will get on the ice (TOI) in various situations (even strength,
+short-handed, power play) in the upcoming 2014-2015 season?
+
+## Data
+
+As before, we load our database of season-wide NHL data into a data frame called
+`skaterstats`.  We'll also grab our games played predictions and store it in a
+data frame called `skatpred15`; these two steps are done with the `setup.R` file.
+Finally, we will load our previous model for games played (`GPModel`).
+
+```{r, echo=FALSE, results='hide'}
+source('~/workspace/NHL_regression/R/setup.R')
+skaterstats <- skaterstats[, -c(3:5, 38:41)]
+```
+
+## Feature Selection
+
+We'd like to compare a few different attempts. First, we'd like to model time on
+ice directly, with and without our predicted games played. Then, we'd like to 
+model time on ice per game and multiply it by our predicted games played numbers
+and compare the accuracy.
+
+We'll start again by modelling even-strength TOI using all possible predictors,
+then try to ascertain which are the most important factors.
+
+```{r}
+gbmdata <- nhlShape(2012, 2013, outcome = 38)
+rfdata <- nhlShape(2013, 2013, outcome = 38)
+```
+
+First, we build random forest models from several seeds.
+
+```{r, cache=TRUE}
+esrfmod1 <- nhlBuild(data = rfdata, perc = 0.7, seed = 9112)
+esrfmod2 <- nhlBuild(data = rfdata, perc = 0.7, seed = 2857)
+esrfmod3 <- nhlBuild(data = rfdata, perc = 0.7, seed = 31415)
+esrfmod4 <- nhlBuild(data = rfdata, perc = 0.7, seed = 28182)
+```
+
+```{r, echo=FALSE}
+varImpPlot(esrfmod1)
+varImpPlot(esrfmod2)
+varImpPlot(esrfmod3)
+varImpPlot(esrfmod4)
+```
+
+```{r, cache=TRUE, results='hide'}
+esgbmmod1 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 9112)
+esgbmmod2 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 2857)
+esgbmmod3 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 31415)
+esgbmmod4 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 28182)
+```
+
+```{r, echo=FALSE}
+sum1 <- as.data.frame(summary(esgbmmod1, plotit=FALSE))
+sum2 <- as.data.frame(summary(esgbmmod2, plotit=FALSE))
+sum3 <- as.data.frame(summary(esgbmmod3, plotit=FALSE))
+sum4 <- as.data.frame(summary(esgbmmod4, plotit=FALSE))
+sum <- merge(sum1, sum2, by = 1)
+names(sum) <- c("var", "var.inf.1", "var.inf.2")
+sum <- merge(sum, sum3, by = 1)
+names(sum)[4] <- "var.inf.3"
+sum <- merge(sum, sum4, by = 1)
+names(sum)[5] <- "var.inf.4"
+sum$var.inf.tot <- sum$var.inf.1 + sum$var.inf.2 + sum$var.inf.3 + sum$var.inf.4
+sum <- sum[order(sum$var.inf.tot, decreasing = TRUE), ]
+sumout <- sum[sum$var.inf.tot > 4, c(1, 6)]
+row.names(sumout) <- NULL
+print(sumout)
+```
