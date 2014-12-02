@@ -15,10 +15,6 @@ rs <- dbSendQuery(conn, statement = "SELECT * FROM skaters
                   ORDER BY nhl_num;")
 skaters <- fetch(rs, n = -1)
 dbClearResult(rs)
-rs <- dbSendQuery(conn, statement = "SELECT * FROM skatpred15
-                  ORDER BY nhl_num;")
-skatpred15 <- fetch(rs, n = -1)
-dbClearResult(rs)
 dbDisconnect(conn)
 library(caret)
 library(randomForest)

@@ -82,3 +82,60 @@ sumout <- sum[sum$var.inf.tot > 4, c(1, 6)]
 row.names(sumout) <- NULL
 print(sumout)
 ```
+
+```{r}
+col1 <- c(1:3, 15, 24, 30:31, 38:41)
+col2 <- c(28:29, 32)
+esDataRF1 <- nhlShape(2013, 2013, cols = c(col1, col2[1]), outcome = 38, rm.nhlnum = F)
+esDataRF2 <- nhlShape(2013, 2013, cols = c(col1, col2[2]), outcome = 38, rm.nhlnum = F)
+esDataRF3 <- nhlShape(2013, 2013, cols = c(col1, col2[3]), outcome = 38, rm.nhlnum = F)
+esDataRF4 <- nhlShape(2013, 2013, cols = c(col1, col2), outcome = 38, rm.nhlnum = F)
+esDataGBM1 <- nhlShape(2012, 2013, cols = c(col1, col2[1]), outcome = 38,
+                       rm.nhlnum = F, rm.NA = FALSE)
+esDataGBM1 <- subset(esDataGBM1, !is.na(games_played.1))
+esDataGBM2 <- nhlShape(2012, 2013, cols = c(col1, col2[2]), outcome = 38,
+                       rm.nhlnum = F, rm.NA = FALSE)
+esDataGBM2 <- subset(esDataGBM2, !is.na(games_played.1))
+esDataGBM3 <- nhlShape(2012, 2013, cols = c(col1, col2[3]), outcome = 38,
+                       rm.nhlnum = F, rm.NA = FALSE)
+esDataGBM3 <- subset(esDataGBM3, !is.na(games_played.1))
+esDataGBM4 <- nhlShape(2012, 2013, cols = c(col1, col2), outcome = 38,
+                       rm.nhlnum = F, rm.NA = FALSE)
+esDataGBM4 <- subset(esDataGBM4, !is.na(games_played.1))
+```
+
+Here are the low level models.
+
+```{r, cache=TRUE}
+esrfmod1 <- nhlBuild(esDataRF1[, -1], perc = 1, seed = 77677)
+esrfmod2 <- nhlBuild(esDataRF2[, -1], perc = 1)
+esrfmod3 <- nhlBuild(esDataRF3[, -1], perc = 1)
+esrfmod4 <- nhlBuild(esDataRF4[, -1], perc = 1)
+esgbmmod1 <- nhlBuild(esDataGBM1[, -1], type = "gbm", perc = 1)
+esgbmmod2 <- nhlBuild(esDataGBM2[, -1], type = "gbm", perc = 1)
+esgbmmod3 <- nhlBuild(esDataGBM3[, -1], type = "gbm", perc = 1)
+esgbmmod4 <- nhlBuild(esDataGBM4[, -1], type = "gbm", perc = 1)
+```
+
+We build our data frame with the low level predictions in it.
+
+```{r}
+esrf1 <- predict(esrfmod1, esDataRF1)
+esrf2 <- predict(esrfmod2, esDataRF2)
+esrf3 <- predict(esrfmod3, esDataRF3)
+esrf4 <- predict(esrfmod4, esDataRF4)
+esrf <- as.data.frame(cbind(esDataRF1[, 1], esrf1, esrf2, esrf3, esrf4))
+names(esrf) <- c("nhl_num", "esrf1", "esrf2", "esrf3", "esrf4")
+esgbm1 <- predict(esgbmmod1, esDataGBM1)
+esgbm2 <- predict(esgbmmod2, esDataGBM2)
+esgbm3 <- predict(esgbmmod3, esDataGBM3)
+esgbm4 <- predict(esgbmmod4, esDataGBM4)
+esgbm <- as.data.frame(cbind(esDataGBM1[, 1], esgbm1, esgbm2, esgbm3, esgbm4))
+names(esgbm) <- c("nhl_num", "esgbm1", "esgbm2", "esgbm3", "esgbm4")
+esData <- merge(esrf, esgbm, all = TRUE)
+esData <- merge(esData, esDataGBM1[, c(1, 22)])
+```
+
+```{r}
+esModel <- nhlBuild(esData, type = "gbm", perc = 0.7, seed = 98765)
+```
