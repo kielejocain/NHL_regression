@@ -171,7 +171,7 @@ gpDataGBM6 <- subset(gpDataGBM6, !is.na(games_played.1))
 
 Here are the lower level models.
 
-```{r, cache=TRUE}
+```{r, cache=TRUE, results='hide'}
 gprfmod1 <- nhlBuild(gpDataRF1[, -1], perc = 1, seed = 1512)
 gprfmod2 <- nhlBuild(gpDataRF2[, -1], perc = 1)
 gprfmod3 <- nhlBuild(gpDataRF3[, -1], perc = 1)
@@ -211,6 +211,6 @@ gpData <- merge(gpData, gpDataGBM1[, c(1, 34)])
 
 Now we finally build a boosting model on the given data set.
 
-```{r, cache=TRUE}
-gpModel <- nhlBuild(gpData, type = "gbm", perc = 0.7, seed = 61616)
+```{r, cache=TRUE, results='hide'}
+gpModel <- nhlBuild(gpData[, -1], type = "gbm", perc = 0.7, seed = 61616)
 ```

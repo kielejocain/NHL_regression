@@ -1,5 +1,5 @@
 ---
-title: "Predicting Games Played"
+title: "Predicting Situational Time On Ice"
 author: "Kyle Joecken"
 output: pdf_document
 ---
@@ -136,6 +136,249 @@ esData <- merge(esrf, esgbm, all = TRUE)
 esData <- merge(esData, esDataGBM1[, c(1, 22)])
 ```
 
+The final even strength model is built.
+
 ```{r}
-esModel <- nhlBuild(esData, type = "gbm", perc = 0.7, seed = 98765)
+esModel <- nhlBuild(esData[, -1], type = "gbm", perc = 0.7, seed = 98765)
+```
+
+We repeat the overall process for short-handed time next.
+
+```{r}
+gbmdata <- nhlShape(2012, 2013, outcome = 39)
+rfdata <- nhlShape(2013, 2013, outcome = 39)
+```
+
+```{r, cache=TRUE}
+shrfmod1 <- nhlBuild(data = rfdata, perc = 0.7, seed = 9112)
+shrfmod2 <- nhlBuild(data = rfdata, perc = 0.7, seed = 2857)
+shrfmod3 <- nhlBuild(data = rfdata, perc = 0.7, seed = 31415)
+shrfmod4 <- nhlBuild(data = rfdata, perc = 0.7, seed = 28182)
+```
+
+```{r, echo=FALSE}
+varImpPlot(shrfmod1)
+varImpPlot(shrfmod2)
+varImpPlot(shrfmod3)
+varImpPlot(shrfmod4)
+```
+
+```{r, cache=TRUE, results='hide'}
+shgbmmod1 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 9112)
+shgbmmod2 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 2857)
+shgbmmod3 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 31415)
+shgbmmod4 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 28182)
+```
+
+```{r, echo=FALSE}
+sum1 <- as.data.frame(summary(shgbmmod1, plotit=FALSE))
+sum2 <- as.data.frame(summary(shgbmmod2, plotit=FALSE))
+sum3 <- as.data.frame(summary(shgbmmod3, plotit=FALSE))
+sum4 <- as.data.frame(summary(shgbmmod4, plotit=FALSE))
+sum <- merge(sum1, sum2, by = 1)
+names(sum) <- c("var", "var.inf.1", "var.inf.2")
+sum <- merge(sum, sum3, by = 1)
+names(sum)[4] <- "var.inf.3"
+sum <- merge(sum, sum4, by = 1)
+names(sum)[5] <- "var.inf.4"
+sum$var.inf.tot <- sum$var.inf.1 + sum$var.inf.2 + sum$var.inf.3 + sum$var.inf.4
+sum <- sum[order(sum$var.inf.tot, decreasing = TRUE), ]
+sumout <- sum[sum$var.inf.tot > 4, c(1, 6)]
+row.names(sumout) <- NULL
+print(sumout)
+```
+
+Both models seem to agree; the previous season's `sh_toi` is far and away the best predictor, with `team_pp_goals_against` making
+a surprising showing in second place.  Perhaps there is a possession argument to be made for the inclusion of this factor.
+
+Unsurprising entries that show up every time are remaining TOI stats and `blocked_shots`.  Additional factors of value that show
+up consistently in random forest models are `team_goals_against`, `giveaways`, and `points`; we'll use these as minor factors.
+
+This is going to be quite the simple model.
+
+```{r}
+col1 <- c(1:2, 27, 29, 38:41)
+col2 <- c(6, 26, 31)
+shDataRF1 <- nhlShape(2013, 2013, cols = c(col1, col2[1]), outcome = 39, rm.nhlnum = F)
+shDataRF2 <- nhlShape(2013, 2013, cols = c(col1, col2[2]), outcome = 39, rm.nhlnum = F)
+shDataRF3 <- nhlShape(2013, 2013, cols = c(col1, col2[3]), outcome = 39, rm.nhlnum = F)
+shDataRF4 <- nhlShape(2013, 2013, cols = c(col1, col2), outcome = 39, rm.nhlnum = F)
+shDataGBM1 <- nhlShape(2012, 2013, cols = c(col1, col2[1]), outcome = 39,
+                       rm.nhlnum = F, rm.NA = FALSE)
+shDataGBM1 <- subset(shDataGBM1, !is.na(sh_toi.1))
+shDataGBM2 <- nhlShape(2012, 2013, cols = c(col1, col2[2]), outcome = 39,
+                       rm.nhlnum = F, rm.NA = FALSE)
+shDataGBM2 <- subset(shDataGBM2, !is.na(sh_toi.1))
+shDataGBM3 <- nhlShape(2012, 2013, cols = c(col1, col2[3]), outcome = 39,
+                       rm.nhlnum = F, rm.NA = FALSE)
+shDataGBM3 <- subset(shDataGBM3, !is.na(sh_toi.1))
+shDataGBM4 <- nhlShape(2012, 2013, cols = c(col1, col2), outcome = 39,
+                       rm.nhlnum = F, rm.NA = FALSE)
+shDataGBM4 <- subset(shDataGBM4, !is.na(sh_toi.1))
+```
+
+Here are the low level models.
+
+```{r, cache=TRUE}
+shrfmod1 <- nhlBuild(shDataRF1[, -1], perc = 1, seed = 77677)
+shrfmod2 <- nhlBuild(shDataRF2[, -1], perc = 1)
+shrfmod3 <- nhlBuild(shDataRF3[, -1], perc = 1)
+shrfmod4 <- nhlBuild(shDataRF4[, -1], perc = 1)
+shgbmmod1 <- nhlBuild(shDataGBM1[, -1], type = "gbm", perc = 1)
+shgbmmod2 <- nhlBuild(shDataGBM2[, -1], type = "gbm", perc = 1)
+shgbmmod3 <- nhlBuild(shDataGBM3[, -1], type = "gbm", perc = 1)
+shgbmmod4 <- nhlBuild(shDataGBM4[, -1], type = "gbm", perc = 1)
+```
+
+We build our data frame with the low level predictions in it.
+
+```{r}
+shrf1 <- predict(shrfmod1, shDataRF1)
+shrf2 <- predict(shrfmod2, shDataRF2)
+shrf3 <- predict(shrfmod3, shDataRF3)
+shrf4 <- predict(shrfmod4, shDataRF4)
+shrf <- as.data.frame(cbind(shDataRF1[, 1], shrf1, shrf2, shrf3, shrf4))
+names(shrf) <- c("nhl_num", "shrf1", "shrf2", "shrf3", "shrf4")
+shgbm1 <- predict(shgbmmod1, shDataGBM1)
+shgbm2 <- predict(shgbmmod2, shDataGBM2)
+shgbm3 <- predict(shgbmmod3, shDataGBM3)
+shgbm4 <- predict(shgbmmod4, shDataGBM4)
+shgbm <- as.data.frame(cbind(shDataGBM1[, 1], shgbm1, shgbm2, shgbm3, shgbm4))
+names(shgbm) <- c("nhl_num", "shgbm1", "shgbm2", "shgbm3", "shgbm4")
+shData <- merge(shrf, shgbm, all = TRUE)
+shData <- merge(shData, shDataGBM1[, c(1, 16)])
+```
+
+The final short-handed model is built.
+
+```{r}
+shModel <- nhlBuild(shData[, -1], type = "gbm", perc = 0.7, seed = 98765)
+```
+
+And once more for the power play.
+
+```{r}
+gbmdata <- nhlShape(2012, 2013, outcome = 40)
+rfdata <- nhlShape(2013, 2013, outcome = 40)
+```
+
+```{r, cache=TRUE}
+pprfmod1 <- nhlBuild(data = rfdata, perc = 0.7, seed = 9112)
+pprfmod2 <- nhlBuild(data = rfdata, perc = 0.7, seed = 2857)
+pprfmod3 <- nhlBuild(data = rfdata, perc = 0.7, seed = 31415)
+pprfmod4 <- nhlBuild(data = rfdata, perc = 0.7, seed = 28182)
+```
+
+```{r, echo=FALSE}
+varImpPlot(pprfmod1)
+varImpPlot(pprfmod2)
+varImpPlot(pprfmod3)
+varImpPlot(pprfmod4)
+```
+
+```{r, cache=TRUE, results='hide'}
+ppgbmmod1 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 9112)
+ppgbmmod2 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 2857)
+ppgbmmod3 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 31415)
+ppgbmmod4 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 28182)
+```
+
+```{r, echo=FALSE}
+sum1 <- as.data.frame(summary(ppgbmmod1, plotit=FALSE))
+sum2 <- as.data.frame(summary(ppgbmmod2, plotit=FALSE))
+sum3 <- as.data.frame(summary(ppgbmmod3, plotit=FALSE))
+sum4 <- as.data.frame(summary(ppgbmmod4, plotit=FALSE))
+sum <- merge(sum1, sum2, by = 1)
+names(sum) <- c("var", "var.inf.1", "var.inf.2")
+sum <- merge(sum, sum3, by = 1)
+names(sum)[4] <- "var.inf.3"
+sum <- merge(sum, sum4, by = 1)
+names(sum)[5] <- "var.inf.4"
+sum$var.inf.tot <- sum$var.inf.1 + sum$var.inf.2 + sum$var.inf.3 + sum$var.inf.4
+sum <- sum[order(sum$var.inf.tot, decreasing = TRUE), ]
+sumout <- sum[sum$var.inf.tot > 4, c(1, 6)]
+row.names(sumout) <- NULL
+print(sumout)
+```
+
+Not surprisingly, overall and power play offensive metrics reign supreme here.  In particular,
+team success metrics (*e.g.*, `team_goals_for`) are important.
+
+Shot statistics and points have lesser importance to both models types, and we also add
+`games_played` and `es_toi` from the random forest importance graphs as second-tier
+predictors.
+
+```{r}
+col1 <- c(1:2, 5, 10, 24:25, 40)
+col2 <- c(3, 6, 15, 30, 38)
+ppDataRF1 <- nhlShape(2013, 2013, cols = c(col1, col2[1]), outcome = 40, rm.nhlnum = F)
+ppDataRF2 <- nhlShape(2013, 2013, cols = c(col1, col2[2]), outcome = 40, rm.nhlnum = F)
+ppDataRF3 <- nhlShape(2013, 2013, cols = c(col1, col2[3]), outcome = 40, rm.nhlnum = F)
+ppDataRF4 <- nhlShape(2013, 2013, cols = c(col1, col2[4]), outcome = 40, rm.nhlnum = F)
+ppDataRF5 <- nhlShape(2013, 2013, cols = c(col1, col2[5]), outcome = 40, rm.nhlnum = F)
+ppDataRF6 <- nhlShape(2013, 2013, cols = c(col1, col2), outcome = 40, rm.nhlnum = F)
+ppDataGBM1 <- nhlShape(2012, 2013, cols = c(col1, col2[1]), outcome = 40,
+                       rm.nhlnum = F, rm.NA = FALSE)
+ppDataGBM1 <- subset(ppDataGBM1, !is.na(pp_toi.1))
+ppDataGBM2 <- nhlShape(2012, 2013, cols = c(col1, col2[2]), outcome = 40,
+                       rm.nhlnum = F, rm.NA = FALSE)
+ppDataGBM2 <- subset(ppDataGBM2, !is.na(pp_toi.1))
+ppDataGBM3 <- nhlShape(2012, 2013, cols = c(col1, col2[3]), outcome = 40,
+                       rm.nhlnum = F, rm.NA = FALSE)
+ppDataGBM3 <- subset(ppDataGBM3, !is.na(pp_toi.1))
+ppDataGBM4 <- nhlShape(2012, 2013, cols = c(col1, col2[4]), outcome = 40,
+                       rm.nhlnum = F, rm.NA = FALSE)
+ppDataGBM4 <- subset(ppDataGBM4, !is.na(pp_toi.1))
+ppDataGBM5 <- nhlShape(2012, 2013, cols = c(col1, col2[5]), outcome = 40,
+                       rm.nhlnum = F, rm.NA = FALSE)
+ppDataGBM5 <- subset(ppDataGBM5, !is.na(pp_toi.1))
+ppDataGBM6 <- nhlShape(2012, 2013, cols = c(col1, col2), outcome = 40,
+                       rm.nhlnum = F, rm.NA = FALSE)
+ppDataGBM6 <- subset(ppDataGBM6, !is.na(pp_toi.1))
+```
+
+Here are the low level models.
+
+```{r, cache=TRUE}
+pprfmod1 <- nhlBuild(ppDataRF1[, -1], perc = 1, seed = 77677)
+pprfmod2 <- nhlBuild(ppDataRF2[, -1], perc = 1)
+pprfmod3 <- nhlBuild(ppDataRF3[, -1], perc = 1)
+pprfmod4 <- nhlBuild(ppDataRF4[, -1], perc = 1)
+pprfmod5 <- nhlBuild(ppDataRF5[, -1], perc = 1)
+pprfmod6 <- nhlBuild(ppDataRF6[, -1], perc = 1)
+ppgbmmod1 <- nhlBuild(ppDataGBM1[, -1], type = "gbm", perc = 1)
+ppgbmmod2 <- nhlBuild(ppDataGBM2[, -1], type = "gbm", perc = 1)
+ppgbmmod3 <- nhlBuild(ppDataGBM3[, -1], type = "gbm", perc = 1)
+ppgbmmod4 <- nhlBuild(ppDataGBM4[, -1], type = "gbm", perc = 1)
+ppgbmmod5 <- nhlBuild(ppDataGBM5[, -1], type = "gbm", perc = 1)
+ppgbmmod6 <- nhlBuild(ppDataGBM6[, -1], type = "gbm", perc = 1)
+```
+
+We build our data frame with the low level predictions in it.
+
+```{r}
+pprf1 <- predict(pprfmod1, ppDataRF1)
+pprf2 <- predict(pprfmod2, ppDataRF2)
+pprf3 <- predict(pprfmod3, ppDataRF3)
+pprf4 <- predict(pprfmod4, ppDataRF4)
+pprf5 <- predict(pprfmod5, ppDataRF5)
+pprf6 <- predict(pprfmod6, ppDataRF6)
+pprf <- as.data.frame(cbind(ppDataRF1[, 1], pprf1, pprf2, pprf3, pprf4, pprf5, pprf6))
+names(pprf) <- c("nhl_num", "pprf1", "pprf2", "pprf3", "pprf4", "pprf5", "pprf6")
+ppgbm1 <- predict(ppgbmmod1, ppDataGBM1)
+ppgbm2 <- predict(ppgbmmod2, ppDataGBM2)
+ppgbm3 <- predict(ppgbmmod3, ppDataGBM3)
+ppgbm4 <- predict(ppgbmmod4, ppDataGBM4)
+ppgbm5 <- predict(ppgbmmod5, ppDataGBM5)
+ppgbm6 <- predict(ppgbmmod6, ppDataGBM6)
+ppgbm <- as.data.frame(cbind(ppDataGBM1[, 1], ppgbm1, ppgbm2, ppgbm3, ppgbm4, ppgbm5, ppgbm6))
+names(ppgbm) <- c("nhl_num", "ppgbm1", "ppgbm2", "ppgbm3", "ppgbm4", "ppgbm5", "ppgbm6")
+ppData <- merge(pprf, ppgbm, all = TRUE)
+ppData <- merge(ppData, ppDataGBM1[, c(1, 14)])
+```
+
+The power play time model is finally built.
+
+```{r}
+ppModel <- nhlBuild(ppData[, -1], type = "gbm", perc = 0.7, seed = 98765)
 ```
