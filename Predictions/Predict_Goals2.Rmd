@@ -1,0 +1,302 @@
+---
+title: "Predicting Goals"
+author: "Kyle Joecken"
+date: "12/09/2014"
+output: pdf_document
+---
+
+```{r, include = FALSE}
+library(knitr)
+opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+```{r, echo=FALSE, results='hide'}
+source('~/workspace/NHL_regression/R/setup.R')
+skaterstats <- skaterstats[, -c(3:5, 38:41)]
+```
+
+We first calculate `es_goals`.
+
+```{r}
+skaterstats$es_goals <- skaterstats$goals - skaterstats$pp_goals - skaterstats$sh_goals
+```
+
+We build data sets with `es_goals` as the outcome,
+
+```{r}
+gbmdata <- nhlShape(2012, 2013, outcome = 42)
+rfdata <- nhlShape(2013, 2013, outcome = 42)
+```
+
+and from them we build exploratory models.
+
+```{r, cache=TRUE, results='hide'}
+esGoalFactors <- nhlAnalyze(rfdata, gbmdata, seed = 61616)
+```
+
+Here are some collected factor statistics.
+
+```{r, echo=FALSE}
+print(esGoalFactors)
+```
+
+Plucking a set of first- and second-tier factors, we build focused data sets.
+
+```{r}
+col1 <- c(1:2, 4, 6, 15:16, 30, 32, 38:42)
+col2 <- c(3, 24:25, 29, 33:34)
+esgDataRF1 <- nhlShape(2013, 2013, cols = c(col1, col2[1]), outcome = 42, rm.nhlnum = F)
+esgDataRF2 <- nhlShape(2013, 2013, cols = c(col1, col2[2]), outcome = 42, rm.nhlnum = F)
+esgDataRF3 <- nhlShape(2013, 2013, cols = c(col1, col2[3]), outcome = 42, rm.nhlnum = F)
+esgDataRF4 <- nhlShape(2013, 2013, cols = c(col1, col2[4]), outcome = 42, rm.nhlnum = F)
+esgDataRF5 <- nhlShape(2013, 2013, cols = c(col1, col2[5]), outcome = 42, rm.nhlnum = F)
+esgDataRF6 <- nhlShape(2013, 2013, cols = c(col1, col2[6]), outcome = 42, rm.nhlnum = F)
+esgDataRF7 <- nhlShape(2013, 2013, cols = c(col1, col2), outcome = 42, rm.nhlnum = F)
+esgDataGBM1 <- nhlShape(2012, 2013, cols = c(col1, col2[1]), outcome = 42,
+                       rm.nhlnum = F, rm.NA = FALSE)
+esgDataGBM1 <- subset(esgDataGBM1, !is.na(goals.1))
+esgDataGBM2 <- nhlShape(2012, 2013, cols = c(col1, col2[2]), outcome = 42,
+                       rm.nhlnum = F, rm.NA = FALSE)
+esgDataGBM2 <- subset(esgDataGBM2, !is.na(goals.1))
+esgDataGBM3 <- nhlShape(2012, 2013, cols = c(col1, col2[3]), outcome = 42,
+                       rm.nhlnum = F, rm.NA = FALSE)
+esgDataGBM3 <- subset(esgDataGBM3, !is.na(goals.1))
+esgDataGBM4 <- nhlShape(2012, 2013, cols = c(col1, col2[4]), outcome = 42,
+                       rm.nhlnum = F, rm.NA = FALSE)
+esgDataGBM4 <- subset(esgDataGBM4, !is.na(goals.1))
+esgDataGBM5 <- nhlShape(2012, 2013, cols = c(col1, col2[5]), outcome = 42,
+                       rm.nhlnum = F, rm.NA = FALSE)
+esgDataGBM5 <- subset(esgDataGBM5, !is.na(goals.1))
+esgDataGBM6 <- nhlShape(2012, 2013, cols = c(col1, col2[6]), outcome = 42,
+                       rm.nhlnum = F, rm.NA = FALSE)
+esgDataGBM6 <- subset(esgDataGBM6, !is.na(goals.1))
+esgDataGBM7 <- nhlShape(2012, 2013, cols = c(col1, col2), outcome = 42,
+                       rm.nhlnum = F, rm.NA = FALSE)
+esgDataGBM7 <- subset(esgDataGBM7, !is.na(goals.1))
+```
+
+We build our pre-models from them.
+
+```{r, cache=TRUE, results='hide'}
+esgrfmod1 <- nhlBuild(esgDataRF1[, -1], perc = 1, seed = 98789)
+esgrfmod2 <- nhlBuild(esgDataRF2[, -1], perc = 1)
+esgrfmod3 <- nhlBuild(esgDataRF3[, -1], perc = 1)
+esgrfmod4 <- nhlBuild(esgDataRF4[, -1], perc = 1)
+esgrfmod5 <- nhlBuild(esgDataRF5[, -1], perc = 1)
+esgrfmod6 <- nhlBuild(esgDataRF6[, -1], perc = 1)
+esgrfmod7 <- nhlBuild(esgDataRF7[, -1], perc = 1)
+esggbmmod1 <- nhlBuild(esgDataGBM1[, -1], type = "gbm", perc = 1)
+esggbmmod2 <- nhlBuild(esgDataGBM2[, -1], type = "gbm", perc = 1)
+esggbmmod3 <- nhlBuild(esgDataGBM3[, -1], type = "gbm", perc = 1)
+esggbmmod4 <- nhlBuild(esgDataGBM4[, -1], type = "gbm", perc = 1)
+esggbmmod5 <- nhlBuild(esgDataGBM5[, -1], type = "gbm", perc = 1)
+esggbmmod6 <- nhlBuild(esgDataGBM6[, -1], type = "gbm", perc = 1)
+esggbmmod7 <- nhlBuild(esgDataGBM7[, -1], type = "gbm", perc = 1)
+```
+
+Next we build our meta-data frame from the above predictions.
+
+```{r}
+esgrf1 <- predict(esgrfmod1, esgDataRF1)
+esgrf2 <- predict(esgrfmod2, esgDataRF2)
+esgrf3 <- predict(esgrfmod3, esgDataRF3)
+esgrf4 <- predict(esgrfmod4, esgDataRF4)
+esgrf5 <- predict(esgrfmod5, esgDataRF5)
+esgrf6 <- predict(esgrfmod6, esgDataRF6)
+esgrf7 <- predict(esgrfmod7, esgDataRF7)
+esgrf <- as.data.frame(cbind(esgDataRF1[, 1], esgrf1, esgrf2, esgrf3, esgrf4,
+                             esgrf5, esgrf6, esgrf7))
+names(esgrf) <- c("nhl_num", "esgrf1", "esgrf2", "esgrf3", "esgrf4",
+                 "esgrf5", "esgrf6", "esgrf7")
+esggbm1 <- predict(esggbmmod1, esgDataGBM1)
+esggbm2 <- predict(esggbmmod2, esgDataGBM2)
+esggbm3 <- predict(esggbmmod3, esgDataGBM3)
+esggbm4 <- predict(esggbmmod4, esgDataGBM4)
+esggbm5 <- predict(esggbmmod5, esgDataGBM5)
+esggbm6 <- predict(esggbmmod6, esgDataGBM6)
+esggbm7 <- predict(esggbmmod7, esgDataGBM7)
+esggbm <- as.data.frame(cbind(esgDataGBM1[, 1], esggbm1, esggbm2, esggbm3, esggbm4,
+                              esggbm5, esggbm6, esggbm7))
+names(esggbm) <- c("nhl_num", "esggbm1", "esggbm2", "esggbm3", "esggbm4",
+                   "esggbm5", "esggbm6", "esggbm7")
+esgData <- merge(esgrf, esggbm, all = TRUE)
+esgData <- merge(esgData, esgDataGBM1[, c(1, 26)])
+```
+
+Finally, we build our cumulative even strength goal model.
+
+```{r}
+esgModel <- nhlBuild(esgData[, -1], type = "gbm", perc = 0.7, seed = 345)
+```
+
+We next move on to power play goals.
+
+```{r}
+gbmdata <- nhlShape(2012, 2013, outcome = 9)
+rfdata <- nhlShape(2013, 2013, outcome = 9)
+```
+
+We run our factor analysis function on `pp_goals`.
+
+```{r, cache=TRUE, results='hide'}
+ppGoalFactors <- nhlAnalyze(rfdata, gbmdata, seed = 42724)
+```
+
+```{r, echo=FALSE}
+print(ppGoalFactors)
+```
+
+Again, we build data sets.
+
+```{r}
+col1 <- c(1:2, 4, 6, 9:10, 15, 24:25, 30, 38:41)
+col2 <- c(3, 5, 33:34)
+ppgDataRF1 <- nhlShape(2013, 2013, cols = c(col1, col2[1]), outcome = 9, rm.nhlnum = F)
+ppgDataRF2 <- nhlShape(2013, 2013, cols = c(col1, col2[2]), outcome = 9, rm.nhlnum = F)
+ppgDataRF3 <- nhlShape(2013, 2013, cols = c(col1, col2[3]), outcome = 9, rm.nhlnum = F)
+ppgDataRF4 <- nhlShape(2013, 2013, cols = c(col1, col2[4]), outcome = 9, rm.nhlnum = F)
+ppgDataRF5 <- nhlShape(2013, 2013, cols = c(col1, col2), outcome = 9, rm.nhlnum = F)
+ppgDataGBM1 <- nhlShape(2012, 2013, cols = c(col1, col2[1]), outcome = 9,
+                       rm.nhlnum = F, rm.NA = FALSE)
+ppgDataGBM1 <- subset(ppgDataGBM1, !is.na(goals.1))
+ppgDataGBM2 <- nhlShape(2012, 2013, cols = c(col1, col2[2]), outcome = 9,
+                       rm.nhlnum = F, rm.NA = FALSE)
+ppgDataGBM2 <- subset(ppgDataGBM2, !is.na(goals.1))
+ppgDataGBM3 <- nhlShape(2012, 2013, cols = c(col1, col2[3]), outcome = 9,
+                       rm.nhlnum = F, rm.NA = FALSE)
+ppgDataGBM3 <- subset(ppgDataGBM3, !is.na(goals.1))
+ppgDataGBM4 <- nhlShape(2012, 2013, cols = c(col1, col2[4]), outcome = 9,
+                       rm.nhlnum = F, rm.NA = FALSE)
+ppgDataGBM4 <- subset(ppgDataGBM4, !is.na(goals.1))
+ppgDataGBM5 <- nhlShape(2012, 2013, cols = c(col1, col2), outcome = 9,
+                       rm.nhlnum = F, rm.NA = FALSE)
+ppgDataGBM5 <- subset(ppgDataGBM5, !is.na(goals.1))
+```
+
+We build our pre-models from them.
+
+```{r, cache=TRUE, results='hide'}
+ppgrfmod1 <- nhlBuild(ppgDataRF1[, -1], perc = 1, seed = 15793)
+ppgrfmod2 <- nhlBuild(ppgDataRF2[, -1], perc = 1)
+ppgrfmod3 <- nhlBuild(ppgDataRF3[, -1], perc = 1)
+ppgrfmod4 <- nhlBuild(ppgDataRF4[, -1], perc = 1)
+ppgrfmod5 <- nhlBuild(ppgDataRF5[, -1], perc = 1)
+ppggbmmod1 <- nhlBuild(ppgDataGBM1[, -1], type = "gbm", perc = 1)
+ppggbmmod2 <- nhlBuild(ppgDataGBM2[, -1], type = "gbm", perc = 1)
+ppggbmmod3 <- nhlBuild(ppgDataGBM3[, -1], type = "gbm", perc = 1)
+ppggbmmod4 <- nhlBuild(ppgDataGBM4[, -1], type = "gbm", perc = 1)
+ppggbmmod5 <- nhlBuild(ppgDataGBM5[, -1], type = "gbm", perc = 1)
+```
+
+Next we build our meta-data frame from the above predictions.
+
+```{r}
+ppgrf1 <- predict(ppgrfmod1, ppgDataRF1)
+ppgrf2 <- predict(ppgrfmod2, ppgDataRF2)
+ppgrf3 <- predict(ppgrfmod3, ppgDataRF3)
+ppgrf4 <- predict(ppgrfmod4, ppgDataRF4)
+ppgrf5 <- predict(ppgrfmod5, ppgDataRF5)
+ppgrf <- as.data.frame(cbind(ppgDataRF1[, 1], ppgrf1, ppgrf2, ppgrf3, ppgrf4, ppgrf5))
+names(ppgrf) <- c("nhl_num", "ppgrf1", "ppgrf2", "ppgrf3", "ppgrf4", "ppgrf5")
+ppggbm1 <- predict(ppggbmmod1, ppgDataGBM1)
+ppggbm2 <- predict(ppggbmmod2, ppgDataGBM2)
+ppggbm3 <- predict(ppggbmmod3, ppgDataGBM3)
+ppggbm4 <- predict(ppggbmmod4, ppgDataGBM4)
+ppggbm5 <- predict(ppggbmmod5, ppgDataGBM5)
+ppggbm <- as.data.frame(cbind(ppgDataGBM1[, 1], ppggbm1, ppggbm2, ppggbm3, ppggbm4, ppggbm5))
+names(ppggbm) <- c("nhl_num", "ppggbm1", "ppggbm2", "ppggbm3", "ppggbm4", "ppggbm5")
+ppgData <- merge(ppgrf, ppggbm, all = TRUE)
+ppgData <- merge(ppgData, ppgDataGBM1[, c(1, 28)])
+```
+
+Finally, we build our power play goal model.
+
+```{r}
+ppgModel <- nhlBuild(ppgData[, -1], type = "gbm", perc = 0.7, seed = 7829)
+```
+
+Lastly we model short-handed goals.
+
+```{r}
+gbmdata <- nhlShape(2012, 2013, outcome = 11)
+rfdata <- nhlShape(2013, 2013, outcome = 11)
+```
+
+We run our factor analysis function on `sh_goals`.
+
+```{r, cache=TRUE, results='hide'}
+shGoalFactors <- nhlAnalyze(rfdata, gbmdata, seed = 52825)
+```
+
+```{r, echo=FALSE}
+print(shGoalFactors)
+```
+
+Again, we build data sets.
+
+```{r}
+col1 <- c(1:2, 4, 12, 15:16, 32:34, 39, 42)
+col2 <- c(11, 24, 29, 41)
+shgDataRF1 <- nhlShape(2013, 2013, cols = c(col1, col2[1]), outcome = 11, rm.nhlnum = F)
+shgDataRF2 <- nhlShape(2013, 2013, cols = c(col1, col2[2]), outcome = 11, rm.nhlnum = F)
+shgDataRF3 <- nhlShape(2013, 2013, cols = c(col1, col2[3]), outcome = 11, rm.nhlnum = F)
+shgDataRF4 <- nhlShape(2013, 2013, cols = c(col1, col2[4]), outcome = 11, rm.nhlnum = F)
+shgDataRF5 <- nhlShape(2013, 2013, cols = c(col1, col2), outcome = 11, rm.nhlnum = F)
+shgDataGBM1 <- nhlShape(2012, 2013, cols = c(col1, col2[1]), outcome = 11,
+                       rm.nhlnum = F, rm.NA = FALSE)
+shgDataGBM1 <- subset(shgDataGBM1, !is.na(goals.1))
+shgDataGBM2 <- nhlShape(2012, 2013, cols = c(col1, col2[2]), outcome = 11,
+                       rm.nhlnum = F, rm.NA = FALSE)
+shgDataGBM2 <- subset(shgDataGBM2, !is.na(goals.1))
+shgDataGBM3 <- nhlShape(2012, 2013, cols = c(col1, col2[3]), outcome = 11,
+                       rm.nhlnum = F, rm.NA = FALSE)
+shgDataGBM3 <- subset(shgDataGBM3, !is.na(goals.1))
+shgDataGBM4 <- nhlShape(2012, 2013, cols = c(col1, col2[4]), outcome = 11,
+                       rm.nhlnum = F, rm.NA = FALSE)
+shgDataGBM4 <- subset(shgDataGBM4, !is.na(goals.1))
+shgDataGBM5 <- nhlShape(2012, 2013, cols = c(col1, col2), outcome = 11,
+                       rm.nhlnum = F, rm.NA = FALSE)
+shgDataGBM5 <- subset(shgDataGBM5, !is.na(goals.1))
+```
+
+We build our pre-models from them.
+
+```{r, cache=TRUE, results='hide'}
+shgrfmod1 <- nhlBuild(shgDataRF1[, -1], perc = 1, seed = 2742, distribution = "poisson")
+shgrfmod2 <- nhlBuild(shgDataRF2[, -1], perc = 1, distribution = "poisson")
+shgrfmod3 <- nhlBuild(shgDataRF3[, -1], perc = 1, distribution = "poisson")
+shgrfmod4 <- nhlBuild(shgDataRF4[, -1], perc = 1, distribution = "poisson")
+shgrfmod5 <- nhlBuild(shgDataRF5[, -1], perc = 1, distribution = "poisson")
+shggbmmod1 <- nhlBuild(shgDataGBM1[, -1], type = "gbm", perc = 1, distribution = "poisson")
+shggbmmod2 <- nhlBuild(shgDataGBM2[, -1], type = "gbm", perc = 1, distribution = "poisson")
+shggbmmod3 <- nhlBuild(shgDataGBM3[, -1], type = "gbm", perc = 1, distribution = "poisson")
+shggbmmod4 <- nhlBuild(shgDataGBM4[, -1], type = "gbm", perc = 1, distribution = "poisson")
+shggbmmod5 <- nhlBuild(shgDataGBM5[, -1], type = "gbm", perc = 1, distribution = "poisson")
+```
+
+Next we build our meta-data frame from the above predictions.
+
+```{r}
+shgrf1 <- predict(shgrfmod1, shgDataRF1, type = "response")
+shgrf2 <- predict(shgrfmod2, shgDataRF2, type = "response")
+shgrf3 <- predict(shgrfmod3, shgDataRF3, type = "response")
+shgrf4 <- predict(shgrfmod4, shgDataRF4, type = "response")
+shgrf5 <- predict(shgrfmod5, shgDataRF5, type = "response")
+shgrf <- as.data.frame(cbind(shgDataRF1[, 1], shgrf1, shgrf2, shgrf3, shgrf4, shgrf5))
+names(shgrf) <- c("nhl_num", "shgrf1", "shgrf2", "shgrf3", "shgrf4", "shgrf5")
+shggbm1 <- predict(shggbmmod1, shgDataGBM1, type = "response")
+shggbm2 <- predict(shggbmmod2, shgDataGBM2, type = "response")
+shggbm3 <- predict(shggbmmod3, shgDataGBM3, type = "response")
+shggbm4 <- predict(shggbmmod4, shgDataGBM4, type = "response")
+shggbm5 <- predict(shggbmmod5, shgDataGBM5, type = "response")
+shggbm <- as.data.frame(cbind(shgDataGBM1[, 1], shggbm1, shggbm2, shggbm3, shggbm4, shggbm5))
+names(shggbm) <- c("nhl_num", "shggbm1", "shggbm2", "shggbm3", "shggbm4", "shggbm5")
+shgData <- merge(shgrf, shggbm, all = TRUE)
+shgData <- merge(shgData, shgDataGBM1[, c(1, 22)])
+```
+
+Finally, we build our power play goal model.
+
+```{r}
+shgModel <- nhlBuild(shgData[, -1], type = "gbm", perc = 0.7, seed = 7829, distribution = "poisson")
+```

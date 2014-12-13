@@ -24,5 +24,5 @@ names(output)[1] <- "nhl_num"
 output$games_played <- predict(gpModel, gpData)
 conn <- dbConnect(driv, dbname = "nhltest", user = "postgres",
                   password = "hollyleaf", host = "localhost")
-dbWriteTable(conn, "skatpred15", output)
+dbWriteTable(conn, "skatpred15", output, row.names=FALSE)
 dbDisconnect(conn)
