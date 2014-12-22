@@ -80,8 +80,8 @@ nhlBuild <- function(data, type = "rf", perc = 1, seed = NA, ...) {
       if (type == "rf") {
             model <- randomForest(outcome ~ ., data = training, importance = TRUE, ...)
       } else if (type == "gbm") {
-            model <- gbm(outcome ~ ., data = training, n.trees = 10000,
-                         cv.folds = 5, n.cores = 4, ...)
+            # n.trees = 10000, cv.folds = 5, n.cores = 4
+            model <- gbm(outcome ~ ., data = training, ...)
       }
       if (perc < 1) {
             corr <- cor(testing$outcome, predict(model, testing))
@@ -122,10 +122,10 @@ nhlAnalyze <- function(rfdata, gbmdata, gbm.cutoff = 4, rf.cutoff = 15, seed = N
       rfsum <- rfsum[order(rfsum$rf.tot, decreasing = TRUE),]
       rfsum <- rfsum[rfsum$rf.tot > rf.cutoff, c(1, 10)]
       row.names(rfsum) <- NULL
-      gbmmod1 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7)
-      gbmmod2 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7)
-      gbmmod3 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7)
-      gbmmod4 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7)
+      gbmmod1 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, n.trees = 10000, cv.folds = 5, n.cores = 4)
+      gbmmod2 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, n.trees = 10000, cv.folds = 5, n.cores = 4)
+      gbmmod3 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, n.trees = 10000, cv.folds = 5, n.cores = 4)
+      gbmmod4 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, n.trees = 10000, cv.folds = 5, n.cores = 4)
       gbmsum1 <- as.data.frame(summary(gbmmod1, plotit=FALSE))
       gbmsum2 <- as.data.frame(summary(gbmmod2, plotit=FALSE))
       gbmsum3 <- as.data.frame(summary(gbmmod3, plotit=FALSE))
@@ -142,4 +142,69 @@ nhlAnalyze <- function(rfdata, gbmdata, gbm.cutoff = 4, rf.cutoff = 15, seed = N
       row.names(gbmsum) <- NULL
       output <- merge(rfsum, gbmsum, all = TRUE, sort = FALSE)
       return(output)
+}
+
+nhlModel <- function(start, end, outcome, data = skaterstats,
+                     rf.cutoff = 30, gbm.cutoff = 10, seed = NA, distribution = "gaussian") {
+      rfdata <- nhlShape(end, end, outcome = outcome, data = data)
+      gbmdata <- nhlShape(start, end, outcome = outcome, data = data)
+      factorMatrix <- nhlAnalyze(rfdata, gbmdata, gbm.cutoff = 4,
+                                 rf.cutoff = 15, seed = seed)
+      factors1 <- as.vector(factorMatrix[complete.cases(factorMatrix), 1])
+      factors1 <- strsplit(factors1, ".", fixed = TRUE)
+      cols1 <- vector()
+      for (i in 1:length(factors1)) {
+            cols1[i] <- which(names(data) == factors1[[i]][1])
+      }
+      cols1 <- c(1, 2, cols1[order(cols1)])
+      factorMatrix <- factorMatrix[!complete.cases(factorMatrix), ]
+      factors2 <- strsplit(as.vector(factorMatrix[factorMatrix[, 2] > rf.cutoff, 1]),
+                           ".", fixed = TRUE)
+      factors2 <- factors2[!is.na(factors2)]
+      factors3 <- strsplit(as.vector(factorMatrix[factorMatrix[, 3] > gbm.cutoff, 1]),
+                           ".", fixed = TRUE)
+      factors3 <- factors3[!is.na(factors3)]
+      cols2 <- vector()
+      for (i in 1:length(factors2)){
+            cols2[i] <- which(names(data) == factors2[[i]][1])
+      }
+      len <- length(cols2)
+      for (i in 1:length(factors3)) {
+            cols2[i+len] <- which(names(data) == factors3[[i]][1])
+      }
+      cols2 <- cols2[!duplicated(cols2)]
+      cols2 <- cols2[!(cols2 %in% cols1)]
+      if (length(cols2 == 0)) {
+            #throw controlled error!!
+      }
+      if (length(cols2 == 1)) {
+            warning("You have only one distinguishing factor. Consider lowering your cutoffs.")
+      }
+      cols2 <- cols2[order(cols2)]
+      len <- length(cols2)
+      modData <- list()
+      for (i in 1:len) {
+            modData[[i]] <- nhlShape(end, end, cols = c(cols1, cols2[i]), outcome = outcome, rm.nhlnum = F)
+            modData[[i+len+1]] <- nhlShape(start, end, cols = c(cols1, cols2[i]), outcome = outcome,
+                                           rm.nhlnum = F, rm.NA = FALSE)
+            modData[[i+len+1]] <- subset(modData[[i+len+1]], !is.na(modData[[i+len+1]][, cols1[3]]))
+      }
+      if (len != 1) {
+            modData[[len+1]] <- nhlShape(end, end, cols = c(cols1, cols2), outcome = outcome, rm.nhlnum = F)
+            modData[[2*len+2]] <- nhlShape(start, end, cols = c(cols1, cols2), outcome = outcome,
+                                           rm.nhlnum = F, rm.NA = FALSE)
+            modData[[2*len+2]] <- subset(modData[[2*len+2]], !is.na(modData[[2*len+2]][, cols1[3]]))
+      } else {
+            modData[[2]] <- nhlShape(end, end, cols = cols1, outcome = outcome, rm.nhlnum = F)
+            modData[[4]] <- nhlShape(start, end, cols = cols1, outcome = outcome,
+                                           rm.nhlnum = F, rm.NA = FALSE)
+            modData[[4]] <- subset(modData[[4]], !is.na(modData[[4]][, cols1[3]]))
+      }
+      models <- list()
+      for(i in 1:(len+1)) {
+            models[[i]] <- nhlBuild(data = modData[[i]][, -1], distribution = distribution)
+            models[[i+len+1]] <- nhlBuild(data = modData[[i+len+1]], type = "gbm",
+                                          distribution = distribution, n.trees = 10000,
+                                          cv.folds = 5, n.cores = 4)
+      }
 }

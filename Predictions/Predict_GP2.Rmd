@@ -31,6 +31,7 @@ purpose-built functions to help wrangle the data and build our model.
 
 ```{r, results='hide', echo=FALSE}
 source('~/workspace/NHL_regression/R/setup.R')
+rm(skaters, conn, driv, rs)
 ```
 
 The data was scraped from the NHL.com statistics pages by a Python script using
@@ -66,7 +67,7 @@ rfdata <- nhlShape(2013, 2013, outcome = 3)
 
 First, we build random forest models from several seeds.
 
-```{r, cache=TRUE}
+```{r}
 gprfmod1 <- nhlBuild(data = rfdata, perc = 0.7, seed = 9112)
 gprfmod2 <- nhlBuild(data = rfdata, perc = 0.7, seed = 2857)
 gprfmod3 <- nhlBuild(data = rfdata, perc = 0.7, seed = 31415)
@@ -78,6 +79,10 @@ varImpPlot(gprfmod1)
 varImpPlot(gprfmod2)
 varImpPlot(gprfmod3)
 varImpPlot(gprfmod4)
+```
+
+```{r, echo=FALSE, results='hide'}
+rm(gprfmod1, gprfmod2, gprfmod3, gprfmod4)
 ```
 
 Several predictors make repeat appearances; these can be broken down into a few
@@ -92,7 +97,7 @@ These 16 predictors consistently show as valuable analytically and pass a
 basic smell test; we will look to confirm or confound their importance by 
 constructing a few boosting models and looking for similar patterns.
 
-```{r, cache=TRUE, results='hide'}
+```{r, results='hide'}
 gpgbmmod1 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 9112)
 gpgbmmod2 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 2857)
 gpgbmmod3 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 31415)
@@ -115,6 +120,7 @@ sum <- sum[order(sum$var.inf.tot, decreasing = TRUE), ]
 sumout <- sum[sum$var.inf.tot > 4, c(1, 6)]
 row.names(sumout) <- NULL
 print(sumout)
+rm(gbmdata, rfdata, gpgbmmod1, gpgbmmod2, gpgbmmod3, gpgbmmod4, sum1, sum2, sum3, sum4, sum, sumout)
 ```
 
 This aggregated summary shows that the same collection of predictors are present
@@ -171,7 +177,7 @@ gpDataGBM6 <- subset(gpDataGBM6, !is.na(games_played.1))
 
 Here are the lower level models.
 
-```{r, cache=TRUE, results='hide'}
+```{r, results='hide'}
 gprfmod1 <- nhlBuild(gpDataRF1[, -1], perc = 1, seed = 1512)
 gprfmod2 <- nhlBuild(gpDataRF2[, -1], perc = 1)
 gprfmod3 <- nhlBuild(gpDataRF3[, -1], perc = 1)
@@ -209,8 +215,20 @@ gpData <- merge(gprf, gpgbm, all = TRUE)
 gpData <- merge(gpData, gpDataGBM1[, c(1, 34)])
 ```
 
+```{r, echo=FALSE, results='hide'}
+rm(skaterstats, col1, col2)
+rm(gpDataRF1, gpDataRF2, gpDataRF3, gpDataRF4, gpDataRF5, gpDataRF6)
+rm(gpDataGBM1, gpDataGBM2, gpDataGBM3, gpDataGBM4, gpDataGBM5, gpDataGBM6)
+rm(gprf1, gprf2, gprf3, gprf4, gprf5, gprf6, gprf)
+rm(gpgbm1, gpgbm2, gpgbm3, gpgbm4, gpgbm5, gpgbm6, gpgbm)
+```
+
 Now we finally build a boosting model on the given data set.
 
-```{r, cache=TRUE, results='hide'}
+```{r, results='hide'}
 gpModel <- nhlBuild(gpData[, -1], type = "gbm", perc = 0.7, seed = 61616)
+```
+
+```{r, echo=FALSE, results='hide'}
+rm(gpData, nhlAnalyze, nhlBuild, nhlShape)
 ```
