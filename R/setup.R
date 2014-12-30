@@ -148,6 +148,7 @@ nhlModel <- function(start, end, outcome, data = skaterstats,
                      rf.cutoff = 30, gbm.cutoff = 10, seed = NA, distribution = "gaussian") {
       rfdata <- nhlShape(end, end, outcome = outcome, data = data)
       gbmdata <- nhlShape(start, end, outcome = outcome, data = data)
+      print(paste("Preliminary analysis on", names(data)[outcome]))
       factorMatrix <- nhlAnalyze(rfdata, gbmdata, gbm.cutoff = 4,
                                  rf.cutoff = 15, seed = seed)
       factors1 <- as.vector(factorMatrix[complete.cases(factorMatrix), 1])
@@ -174,14 +175,15 @@ nhlModel <- function(start, end, outcome, data = skaterstats,
       }
       cols2 <- cols2[!duplicated(cols2)]
       cols2 <- cols2[!(cols2 %in% cols1)]
-      if (length(cols2 == 0)) {
-            #throw controlled error!!
+      if (length(cols2) == 0) {
+            stop("No distinguishing factors; please lower your cutoffs.")
       }
-      if (length(cols2 == 1)) {
+      if (length(cols2) == 1) {
             warning("You have only one distinguishing factor. Consider lowering your cutoffs.")
       }
       cols2 <- cols2[order(cols2)]
       len <- length(cols2)
+      print(paste("Building", 2*len+2, "data sets"))
       modData <- list()
       for (i in 1:len) {
             modData[[i]] <- nhlShape(end, end, cols = c(cols1, cols2[i]), outcome = outcome, rm.nhlnum = F)
@@ -189,7 +191,7 @@ nhlModel <- function(start, end, outcome, data = skaterstats,
                                            rm.nhlnum = F, rm.NA = FALSE)
             modData[[i+len+1]] <- subset(modData[[i+len+1]], !is.na(modData[[i+len+1]][, cols1[3]]))
       }
-      if (len != 1) {
+      if (len > 1) {
             modData[[len+1]] <- nhlShape(end, end, cols = c(cols1, cols2), outcome = outcome, rm.nhlnum = F)
             modData[[2*len+2]] <- nhlShape(start, end, cols = c(cols1, cols2), outcome = outcome,
                                            rm.nhlnum = F, rm.NA = FALSE)
@@ -201,10 +203,34 @@ nhlModel <- function(start, end, outcome, data = skaterstats,
             modData[[4]] <- subset(modData[[4]], !is.na(modData[[4]][, cols1[3]]))
       }
       models <- list()
+      print(paste("Building", 2*len+2, "models"))
       for(i in 1:(len+1)) {
+            print(paste("Building model", i))
             models[[i]] <- nhlBuild(data = modData[[i]][, -1], distribution = distribution)
+            print("Building model", i+len+1)
             models[[i+len+1]] <- nhlBuild(data = modData[[i+len+1]], type = "gbm",
                                           distribution = distribution, n.trees = 10000,
                                           cv.folds = 5, n.cores = 4)
       }
+      predData <- as.data.frame(modData[[1]]$nhl_num)
+      names(predData)[1] <- "nhl_num"
+      print("Assembling data for cumulative model")
+      for (i in 1:(2*len+2)) {
+            temp <- predict(models[i], modData[[i]])[[1]]
+            temp <- as.data.frame(cbind(modData[[i]]$nhl_num, temp))
+            names(temp)[1] <- "nhl_num"
+            predData <- merge(predData, temp)
+            if (i <= len + 1) {
+                  names(predData)[i+1] <- paste("rf", i, sep = ".")
+            } else {
+                  names(predData)[i+1] <- paste("gbm", i-len-1, sep = ".")
+            }
+      }
+      predData <- merge(predData, modData[[1]][, c(1, length(names(modData[[1]])))])
+      models[["columns"]] <- c(cols1, cols2)
+      print("Building cumulative model")
+      models[["model"]] <- nhlBuild(data = predData[, -1], type = "gbm",
+                                    distribution = distribution, n.trees = 15000,
+                                    cv.folds = 5, n.cores = 4)
+      return(models)
 }
