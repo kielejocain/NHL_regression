@@ -2,4 +2,5 @@ R/full_retrieve.R
 R/Compilation.Rmd
 .Rproj.user
 .Rhistory
-
+*.Rproj
+*.RData

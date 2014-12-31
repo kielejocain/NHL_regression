@@ -24,6 +24,7 @@ Finally, we will load our previous model for games played (`GPModel`).
 
 ```{r, echo=FALSE, results='hide'}
 source('~/workspace/NHL_regression/R/setup.R')
+rm(skaters, conn, driv, rs)
 skaterstats <- skaterstats[, -c(3:5, 38:41)]
 ```
 
@@ -44,7 +45,7 @@ rfdata <- nhlShape(2013, 2013, outcome = 38)
 
 First, we build random forest models from several seeds.
 
-```{r, cache=TRUE}
+```{r}
 esrfmod1 <- nhlBuild(data = rfdata, perc = 0.7, seed = 9112)
 esrfmod2 <- nhlBuild(data = rfdata, perc = 0.7, seed = 2857)
 esrfmod3 <- nhlBuild(data = rfdata, perc = 0.7, seed = 31415)
@@ -58,11 +59,11 @@ varImpPlot(esrfmod3)
 varImpPlot(esrfmod4)
 ```
 
-```{r, cache=TRUE, results='hide'}
-esgbmmod1 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 9112)
-esgbmmod2 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 2857)
-esgbmmod3 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 31415)
-esgbmmod4 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 28182)
+```{r, results='hide'}
+esgbmmod1 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 9112, n.trees = 10000, cv.folds = 5, n.cores = 4)
+esgbmmod2 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 2857, n.trees = 10000, cv.folds = 5, n.cores = 4)
+esgbmmod3 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 31415, n.trees = 10000, cv.folds = 5, n.cores = 4)
+esgbmmod4 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 28182, n.trees = 10000, cv.folds = 5, n.cores = 4)
 ```
 
 ```{r, echo=FALSE}
@@ -106,15 +107,15 @@ esDataGBM4 <- subset(esDataGBM4, !is.na(games_played.1))
 
 Here are the low level models.
 
-```{r, cache=TRUE}
+```{r}
 esrfmod1 <- nhlBuild(esDataRF1[, -1], perc = 1, seed = 77677)
 esrfmod2 <- nhlBuild(esDataRF2[, -1], perc = 1)
 esrfmod3 <- nhlBuild(esDataRF3[, -1], perc = 1)
 esrfmod4 <- nhlBuild(esDataRF4[, -1], perc = 1)
-esgbmmod1 <- nhlBuild(esDataGBM1[, -1], type = "gbm", perc = 1)
-esgbmmod2 <- nhlBuild(esDataGBM2[, -1], type = "gbm", perc = 1)
-esgbmmod3 <- nhlBuild(esDataGBM3[, -1], type = "gbm", perc = 1)
-esgbmmod4 <- nhlBuild(esDataGBM4[, -1], type = "gbm", perc = 1)
+esgbmmod1 <- nhlBuild(esDataGBM1[, -1], type = "gbm", perc = 1, n.trees = 10000, cv.folds = 5, n.cores = 4)
+esgbmmod2 <- nhlBuild(esDataGBM2[, -1], type = "gbm", perc = 1, n.trees = 10000, cv.folds = 5, n.cores = 4)
+esgbmmod3 <- nhlBuild(esDataGBM3[, -1], type = "gbm", perc = 1, n.trees = 10000, cv.folds = 5, n.cores = 4)
+esgbmmod4 <- nhlBuild(esDataGBM4[, -1], type = "gbm", perc = 1, n.trees = 10000, cv.folds = 5, n.cores = 4)
 ```
 
 We build our data frame with the low level predictions in it.
@@ -139,7 +140,7 @@ esData <- merge(esData, esDataGBM1[, c(1, 22)])
 The final even strength model is built.
 
 ```{r}
-esModel <- nhlBuild(esData[, -1], type = "gbm", perc = 0.7, seed = 98765)
+esModel <- nhlBuild(esData[, -1], type = "gbm", perc = 0.7, seed = 98765, n.trees = 10000, cv.folds = 5, n.cores = 4)
 ```
 
 We repeat the overall process for short-handed time next.
@@ -149,7 +150,7 @@ gbmdata <- nhlShape(2012, 2013, outcome = 39)
 rfdata <- nhlShape(2013, 2013, outcome = 39)
 ```
 
-```{r, cache=TRUE}
+```{r}
 shrfmod1 <- nhlBuild(data = rfdata, perc = 0.7, seed = 9112)
 shrfmod2 <- nhlBuild(data = rfdata, perc = 0.7, seed = 2857)
 shrfmod3 <- nhlBuild(data = rfdata, perc = 0.7, seed = 31415)
@@ -163,11 +164,11 @@ varImpPlot(shrfmod3)
 varImpPlot(shrfmod4)
 ```
 
-```{r, cache=TRUE, results='hide'}
-shgbmmod1 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 9112)
-shgbmmod2 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 2857)
-shgbmmod3 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 31415)
-shgbmmod4 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 28182)
+```{r, results='hide'}
+shgbmmod1 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 9112, n.trees = 10000, cv.folds = 5, n.cores = 4)
+shgbmmod2 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 2857, n.trees = 10000, cv.folds = 5, n.cores = 4)
+shgbmmod3 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 31415, n.trees = 10000, cv.folds = 5, n.cores = 4)
+shgbmmod4 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 28182, n.trees = 10000, cv.folds = 5, n.cores = 4)
 ```
 
 ```{r, echo=FALSE}
@@ -219,15 +220,15 @@ shDataGBM4 <- subset(shDataGBM4, !is.na(sh_toi.1))
 
 Here are the low level models.
 
-```{r, cache=TRUE}
+```{r}
 shrfmod1 <- nhlBuild(shDataRF1[, -1], perc = 1, seed = 77677)
 shrfmod2 <- nhlBuild(shDataRF2[, -1], perc = 1)
 shrfmod3 <- nhlBuild(shDataRF3[, -1], perc = 1)
 shrfmod4 <- nhlBuild(shDataRF4[, -1], perc = 1)
-shgbmmod1 <- nhlBuild(shDataGBM1[, -1], type = "gbm", perc = 1)
-shgbmmod2 <- nhlBuild(shDataGBM2[, -1], type = "gbm", perc = 1)
-shgbmmod3 <- nhlBuild(shDataGBM3[, -1], type = "gbm", perc = 1)
-shgbmmod4 <- nhlBuild(shDataGBM4[, -1], type = "gbm", perc = 1)
+shgbmmod1 <- nhlBuild(shDataGBM1[, -1], type = "gbm", perc = 1, n.trees = 10000, cv.folds = 5, n.cores = 4)
+shgbmmod2 <- nhlBuild(shDataGBM2[, -1], type = "gbm", perc = 1, n.trees = 10000, cv.folds = 5, n.cores = 4)
+shgbmmod3 <- nhlBuild(shDataGBM3[, -1], type = "gbm", perc = 1, n.trees = 10000, cv.folds = 5, n.cores = 4)
+shgbmmod4 <- nhlBuild(shDataGBM4[, -1], type = "gbm", perc = 1, n.trees = 10000, cv.folds = 5, n.cores = 4)
 ```
 
 We build our data frame with the low level predictions in it.
@@ -252,7 +253,7 @@ shData <- merge(shData, shDataGBM1[, c(1, 16)])
 The final short-handed model is built.
 
 ```{r}
-shModel <- nhlBuild(shData[, -1], type = "gbm", perc = 0.7, seed = 98765)
+shModel <- nhlBuild(shData[, -1], type = "gbm", perc = 0.7, seed = 98765, n.trees = 10000, cv.folds = 5, n.cores = 4)
 ```
 
 And once more for the power play.
@@ -262,7 +263,7 @@ gbmdata <- nhlShape(2012, 2013, outcome = 40)
 rfdata <- nhlShape(2013, 2013, outcome = 40)
 ```
 
-```{r, cache=TRUE}
+```{r}
 pprfmod1 <- nhlBuild(data = rfdata, perc = 0.7, seed = 9112)
 pprfmod2 <- nhlBuild(data = rfdata, perc = 0.7, seed = 2857)
 pprfmod3 <- nhlBuild(data = rfdata, perc = 0.7, seed = 31415)
@@ -276,11 +277,11 @@ varImpPlot(pprfmod3)
 varImpPlot(pprfmod4)
 ```
 
-```{r, cache=TRUE, results='hide'}
-ppgbmmod1 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 9112)
-ppgbmmod2 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 2857)
-ppgbmmod3 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 31415)
-ppgbmmod4 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 28182)
+```{r, results='hide'}
+ppgbmmod1 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 9112, n.trees = 10000, cv.folds = 5, n.cores = 4)
+ppgbmmod2 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 2857, n.trees = 10000, cv.folds = 5, n.cores = 4)
+ppgbmmod3 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 31415, n.trees = 10000, cv.folds = 5, n.cores = 4)
+ppgbmmod4 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, seed = 28182, n.trees = 10000, cv.folds = 5, n.cores = 4)
 ```
 
 ```{r, echo=FALSE}
@@ -339,19 +340,19 @@ ppDataGBM6 <- subset(ppDataGBM6, !is.na(pp_toi.1))
 
 Here are the low level models.
 
-```{r, cache=TRUE}
+```{r}
 pprfmod1 <- nhlBuild(ppDataRF1[, -1], perc = 1, seed = 77677)
 pprfmod2 <- nhlBuild(ppDataRF2[, -1], perc = 1)
 pprfmod3 <- nhlBuild(ppDataRF3[, -1], perc = 1)
 pprfmod4 <- nhlBuild(ppDataRF4[, -1], perc = 1)
 pprfmod5 <- nhlBuild(ppDataRF5[, -1], perc = 1)
 pprfmod6 <- nhlBuild(ppDataRF6[, -1], perc = 1)
-ppgbmmod1 <- nhlBuild(ppDataGBM1[, -1], type = "gbm", perc = 1)
-ppgbmmod2 <- nhlBuild(ppDataGBM2[, -1], type = "gbm", perc = 1)
-ppgbmmod3 <- nhlBuild(ppDataGBM3[, -1], type = "gbm", perc = 1)
-ppgbmmod4 <- nhlBuild(ppDataGBM4[, -1], type = "gbm", perc = 1)
-ppgbmmod5 <- nhlBuild(ppDataGBM5[, -1], type = "gbm", perc = 1)
-ppgbmmod6 <- nhlBuild(ppDataGBM6[, -1], type = "gbm", perc = 1)
+ppgbmmod1 <- nhlBuild(ppDataGBM1[, -1], type = "gbm", perc = 1, n.trees = 10000, cv.folds = 5, n.cores = 4)
+ppgbmmod2 <- nhlBuild(ppDataGBM2[, -1], type = "gbm", perc = 1, n.trees = 10000, cv.folds = 5, n.cores = 4)
+ppgbmmod3 <- nhlBuild(ppDataGBM3[, -1], type = "gbm", perc = 1, n.trees = 10000, cv.folds = 5, n.cores = 4)
+ppgbmmod4 <- nhlBuild(ppDataGBM4[, -1], type = "gbm", perc = 1, n.trees = 10000, cv.folds = 5, n.cores = 4)
+ppgbmmod5 <- nhlBuild(ppDataGBM5[, -1], type = "gbm", perc = 1, n.trees = 10000, cv.folds = 5, n.cores = 4)
+ppgbmmod6 <- nhlBuild(ppDataGBM6[, -1], type = "gbm", perc = 1, n.trees = 10000, cv.folds = 5, n.cores = 4)
 ```
 
 We build our data frame with the low level predictions in it.
@@ -380,5 +381,22 @@ ppData <- merge(ppData, ppDataGBM1[, c(1, 14)])
 The power play time model is finally built.
 
 ```{r}
-ppModel <- nhlBuild(ppData[, -1], type = "gbm", perc = 0.7, seed = 98765)
+ppModel <- nhlBuild(ppData[, -1], type = "gbm", perc = 0.7, seed = 98765, n.trees = 10000, cv.folds = 5, n.cores = 4)
+```
+
+```{r, echo=FALSE, results='hide'}
+rm(skaterstats, nhlAnalyze, nhlBuild, nhlModel, nhlShape)
+rm(gbmdata, rfdata)
+rm(sum1, sum2, sum3, sum4, sum, sumout)
+rm(esDataRF1, esDataRF2, esDataRF3, esDataRF4, esDataGBM1, esDataGBM2, esDataGBM3, esDataGBM4)
+rm(esrf1, esrf2, esrf3, esrf4, esrf)
+rm(esgbm1, esgbm2, esgbm3, esgbm4, esgbm, esData)
+rm(shDataRF1, shDataRF2, shDataRF3, shDataRF4, shDataGBM1, shDataGBM2, shDataGBM3, shDataGBM4)
+rm(shrf1, shrf2, shrf3, shrf4, shrf)
+rm(shgbm1, shgbm2, shgbm3, shgbm4, shgbm, shData)
+rm(ppDataRF1, ppDataRF2, ppDataRF3, ppDataRF4, ppDataRF5, ppDataRF6)
+rm(ppDataGBM1, ppDataGBM2, ppDataGBM3, ppDataGBM4, ppDataGBM5, ppDataGBM6)
+rm(pprf1, pprf2, pprf3, pprf4, pprf5, pprf6, pprf)
+rm(ppgbm1, ppgbm2, ppgbm3, ppgbm4, ppgbm5, ppgbm6, ppgbm, ppData)
+rm(col1, col2)
 ```
