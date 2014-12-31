@@ -207,7 +207,7 @@ nhlModel <- function(start, end, outcome, data = skaterstats,
       for(i in 1:(len+1)) {
             print(paste("Building model", i))
             models[[i]] <- nhlBuild(data = modData[[i]][, -1], distribution = distribution)
-            print("Building model", i+len+1)
+            print(paste("Building model", i+len+1))
             models[[i+len+1]] <- nhlBuild(data = modData[[i+len+1]], type = "gbm",
                                           distribution = distribution, n.trees = 10000,
                                           cv.folds = 5, n.cores = 4)
