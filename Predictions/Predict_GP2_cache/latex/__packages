@@ -1,0 +1,14 @@
+base
+caret
+DBI
+doMC
+foreach
+gbm
+ggplot2
+iterators
+knitr
+lattice
+lubridate
+randomForest
+RPostgreSQL
+survival
