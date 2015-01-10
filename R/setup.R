@@ -84,7 +84,7 @@ nhlBuild <- function(data, type = "rf", perc = 1, seed = NA, ...) {
             model <- gbm(outcome ~ ., data = training, ...)
       }
       if (perc < 1) {
-            corr <- cor(testing$outcome, predict(model, testing))
+            corr <- cor(testing$outcome, predict(model, testing, type = "response"))
             print(corr)
       }
       return(model)
@@ -158,6 +158,10 @@ nhlModel <- function(start, end, outcome, data = skaterstats,
             cols1[i] <- which(names(data) == factors1[[i]][1])
       }
       cols1 <- c(1, 2, cols1[order(cols1)])
+      if (length(cols1) == 2) {
+            print(factorMatrix[1, ])
+            stop("No primary factors; please lower your cutoffs.")
+      }
       factorMatrix <- factorMatrix[!complete.cases(factorMatrix), ]
       factors2 <- strsplit(as.vector(factorMatrix[factorMatrix[, 2] > rf.cutoff, 1]),
                            ".", fixed = TRUE)
@@ -189,18 +193,18 @@ nhlModel <- function(start, end, outcome, data = skaterstats,
             modData[[i]] <- nhlShape(end, end, cols = c(cols1, cols2[i]), outcome = outcome, rm.nhlnum = F)
             modData[[i+len+1]] <- nhlShape(start, end, cols = c(cols1, cols2[i]), outcome = outcome,
                                            rm.nhlnum = F, rm.NA = FALSE)
-            modData[[i+len+1]] <- subset(modData[[i+len+1]], !is.na(modData[[i+len+1]][, cols1[3]]))
+            modData[[i+len+1]] <- subset(modData[[i+len+1]], modData[[i+len+1]]$nhl_num %in% modData[[1]]$nhl_num)
       }
       if (len > 1) {
             modData[[len+1]] <- nhlShape(end, end, cols = c(cols1, cols2), outcome = outcome, rm.nhlnum = F)
             modData[[2*len+2]] <- nhlShape(start, end, cols = c(cols1, cols2), outcome = outcome,
                                            rm.nhlnum = F, rm.NA = FALSE)
-            modData[[2*len+2]] <- subset(modData[[2*len+2]], !is.na(modData[[2*len+2]][, cols1[3]]))
+            modData[[2*len+2]] <- subset(modData[[2*len+2]], modData[[2*len+2]]$nhl_num %in% modData[[1]]$nhl_num)
       } else {
             modData[[2]] <- nhlShape(end, end, cols = cols1, outcome = outcome, rm.nhlnum = F)
             modData[[4]] <- nhlShape(start, end, cols = cols1, outcome = outcome,
                                            rm.nhlnum = F, rm.NA = FALSE)
-            modData[[4]] <- subset(modData[[4]], !is.na(modData[[4]][, cols1[3]]))
+            modData[[4]] <- subset(modData[[4]], modData[[4]]$nhl_num %in% modData[[1]]$nhl_num)
       }
       models <- list()
       print(paste("Building", 2*len+2, "models"))
@@ -216,7 +220,7 @@ nhlModel <- function(start, end, outcome, data = skaterstats,
       names(predData)[1] <- "nhl_num"
       print("Assembling data for cumulative model")
       for (i in 1:(2*len+2)) {
-            temp <- predict(models[i], modData[[i]])[[1]]
+            temp <- predict(models[i], modData[[i]], type = "response")[[1]]
             temp <- as.data.frame(cbind(modData[[i]]$nhl_num, temp))
             names(temp)[1] <- "nhl_num"
             predData <- merge(predData, temp)
@@ -236,19 +240,19 @@ nhlModel <- function(start, end, outcome, data = skaterstats,
 }
 
 nhlPredict <- function (start, end, outcome, models, data = skaterstats) {
-      rfdata <- nhlShape(end, end, cols = models[["columns"]], rm.nhlnum = FALSE)
-      gbmdata <- nhlShape(start, end, cols = models[["columns"]], rm.nhlnum = FALSE)
+      rfData <- nhlShape(end, end, cols = models[["columns"]], rm.nhlnum = FALSE)
+      gbmData <- nhlShape(start, end, cols = models[["columns"]], rm.nhlnum = FALSE)
       rfData <- rfData[rfData$nhl_num %in% gbmData$nhl_num, ]
       predData <- as.data.frame(gbmData$nhl_num)
       names(predData)[1] <- "nhl_num"
       len <- (length(models) - 2)/2
       for (i in 1:len) {
-            predData <- cbind(predData, predict(models[i], rfdata))
-            predData <- cbind(predData, predict(models[len+i], gbmdata))
+            predData <- cbind(predData, predict(models[i], rfData, type = "response"))
+            predData <- cbind(predData, predict(models[len+i], gbmData, type = "response"))
             names(predData)[2*i] <- paste("rf", i, sep = ".")
             names(predData)[2*i+1] <- paste("gbm", i, sep = ".")
       }
-      predData$out <- predict(models[["model"]], predData)
+      predData$out <- predict(models[["model"]], predData, type = "response")
       names(predData)[2*len+2] <- names(data)[outcome]
       return(predData[, c(1, 2*len+2)])
 }
