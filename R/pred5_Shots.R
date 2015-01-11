@@ -8,6 +8,6 @@ dbClearResult(rs)
 skaterstats <- skaterstats[, -c(3:5, 38:41)]
 shotsModel <- nhlModel(2012, 2013, 15, seed = 681321)
 output <- merge(output, nhlPredict(2013, 2014, 15, shotsModel))
-output$shot_pct <- output$goals / output$shots
+output$shot_pct <- output$goals / output$shots * 100
 dbWriteTable(conn, "skatpred15", output, overwrite=TRUE, row.names = FALSE)
 dbDisconnect(conn)
