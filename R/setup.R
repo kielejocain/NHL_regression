@@ -144,48 +144,50 @@ nhlAnalyze <- function(rfdata, gbmdata, gbm.cutoff = 4, rf.cutoff = 15, seed = N
       return(output)
 }
 
-nhlModel <- function(start, end, outcome, data = skaterstats,
+nhlModel <- function(start, end, outcome, data = skaterstats, cols1 = NA, cols2 = NA,
                      rf.cutoff = 30, gbm.cutoff = 10, seed = NA, distribution = "gaussian") {
-      rfdata <- nhlShape(end, end, outcome = outcome, data = data)
-      gbmdata <- nhlShape(start, end, outcome = outcome, data = data)
-      print(paste("Preliminary analysis on", names(data)[outcome]))
-      factorMatrix <- nhlAnalyze(rfdata, gbmdata, gbm.cutoff = 4,
-                                 rf.cutoff = 15, seed = seed)
-      factors1 <- as.vector(factorMatrix[complete.cases(factorMatrix), 1])
-      factors1 <- strsplit(factors1, ".", fixed = TRUE)
-      cols1 <- vector()
-      for (i in 1:length(factors1)) {
-            cols1[i] <- which(names(data) == factors1[[i]][1])
+      if (!is.na(cols1)) {
+            rfdata <- nhlShape(end, end, outcome = outcome, data = data)
+            gbmdata <- nhlShape(start, end, outcome = outcome, data = data)
+            print(paste("Preliminary analysis on", names(data)[outcome]))
+            factorMatrix <- nhlAnalyze(rfdata, gbmdata, gbm.cutoff = 4,
+                                       rf.cutoff = 15, seed = seed)
+            factors1 <- as.vector(factorMatrix[complete.cases(factorMatrix), 1])
+            factors1 <- strsplit(factors1, ".", fixed = TRUE)
+            cols1 <- vector()
+            for (i in 1:length(factors1)) {
+                  cols1[i] <- which(names(data) == factors1[[i]][1])
+            }
+            cols1 <- c(1, 2, cols1[order(cols1)])
+            if (length(cols1) == 2) {
+                  print(factorMatrix[1, ])
+                  stop("No primary factors; please lower your cutoffs.")
+            }
+            factorMatrix <- factorMatrix[!complete.cases(factorMatrix), ]
+            factors2 <- strsplit(as.vector(factorMatrix[factorMatrix[, 2] > rf.cutoff, 1]),
+                                 ".", fixed = TRUE)
+            factors2 <- factors2[!is.na(factors2)]
+            factors3 <- strsplit(as.vector(factorMatrix[factorMatrix[, 3] > gbm.cutoff, 1]),
+                                 ".", fixed = TRUE)
+            factors3 <- factors3[!is.na(factors3)]
+            cols2 <- vector()
+            for (i in 1:length(factors2)){
+                  cols2[i] <- which(names(data) == factors2[[i]][1])
+            }
+            len <- length(cols2)
+            for (i in 1:length(factors3)) {
+                  cols2[i+len] <- which(names(data) == factors3[[i]][1])
+            }
+            cols2 <- cols2[!duplicated(cols2)]
+            cols2 <- cols2[!(cols2 %in% cols1)]
+            if (length(cols2) == 1) {
+                  warning("You have only one distinguishing factor. Consider lowering your cutoffs.")
+            }
+            cols2 <- cols2[order(cols2)]     
       }
-      cols1 <- c(1, 2, cols1[order(cols1)])
-      if (length(cols1) == 2) {
-            print(factorMatrix[1, ])
-            stop("No primary factors; please lower your cutoffs.")
-      }
-      factorMatrix <- factorMatrix[!complete.cases(factorMatrix), ]
-      factors2 <- strsplit(as.vector(factorMatrix[factorMatrix[, 2] > rf.cutoff, 1]),
-                           ".", fixed = TRUE)
-      factors2 <- factors2[!is.na(factors2)]
-      factors3 <- strsplit(as.vector(factorMatrix[factorMatrix[, 3] > gbm.cutoff, 1]),
-                           ".", fixed = TRUE)
-      factors3 <- factors3[!is.na(factors3)]
-      cols2 <- vector()
-      for (i in 1:length(factors2)){
-            cols2[i] <- which(names(data) == factors2[[i]][1])
-      }
-      len <- length(cols2)
-      for (i in 1:length(factors3)) {
-            cols2[i+len] <- which(names(data) == factors3[[i]][1])
-      }
-      cols2 <- cols2[!duplicated(cols2)]
-      cols2 <- cols2[!(cols2 %in% cols1)]
       if (length(cols2) == 0) {
             stop("No distinguishing factors; please lower your cutoffs.")
       }
-      if (length(cols2) == 1) {
-            warning("You have only one distinguishing factor. Consider lowering your cutoffs.")
-      }
-      cols2 <- cols2[order(cols2)]
       len <- length(cols2)
       print(paste("Building", 2*len+2, "data sets"))
       modData <- list()
@@ -231,7 +233,8 @@ nhlModel <- function(start, end, outcome, data = skaterstats,
             }
       }
       predData <- merge(predData, modData[[1]][, c(1, length(names(modData[[1]])))])
-      models[["columns"]] <- c(cols1, cols2)
+      models[["cols1"]] <- cols1
+      models[["cols2"]] <- cols2
       print("Building cumulative model")
       models[["model"]] <- nhlBuild(data = predData[, -1], type = "gbm",
                                     distribution = distribution, n.trees = 15000,
