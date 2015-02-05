@@ -54,6 +54,30 @@ nhlShape <- function(start, end, cols = NA, outcome = NA, data = skaterstats,
       return(output)
 }
 
+nhlShapepg <- function(start, end, cols = NA, outcome = NA, data = skaterstats,
+                     rm.nhlnum = TRUE, rm.NA = TRUE){
+      output <- subset(data, season >= start & season <= end)
+      output$season <- end + 1 - output$season
+      if (!is.na(cols[1])) {
+            output <- output[, cols]
+      }
+      output <- reshape(output, timevar = "season", idvar = "nhl_num",
+                        direction = "wide")
+      if (!is.na(outcome)) {
+            values <- subset(data, season == end+1)
+            values <- values[, c(1, outcome)]
+            names(values)[2] <- "outcome"
+            output <- merge(output, values)
+      }
+      if (rm.nhlnum) {
+            output <- output[, -1]
+      }
+      if (rm.NA) {
+            output <- output[complete.cases(output), ]
+      }      
+      return(output)
+}
+
 # The nhlBuild function builds a machine learning model that predicts the chosen
 # outcome, using as features the selected columns over the desired previous
 # seasons.  Designed to be used after nhlShape(); be sure that the column to be
