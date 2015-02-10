@@ -279,3 +279,22 @@ nhlPredict <- function (start, end, outcome, models, data = skaterstats) {
       names(predData)[2*len+2] <- names(data)[outcome]
       return(predData[, c(1, 2*len+2)])
 }
+
+nhlPredictA <- function (start, end, outcome, models, data = skaterstats) {
+      cols = c(models[["cols1"]], models[["cols2"]])
+      rfData <- nhlShape(end, end, cols = cols, data = data, rm.nhlnum = FALSE)
+      gbmData <- nhlShape(start, end, cols = cols, data = data, rm.nhlnum = FALSE)
+      rfData <- rfData[rfData$nhl_num %in% gbmData$nhl_num, ]
+      predData <- as.data.frame(gbmData$nhl_num)
+      names(predData)[1] <- "nhl_num"
+      len <- (length(models) - 3)/2
+      for (i in 1:len) {
+            predData <- cbind(predData, predict(models[i], rfData, type = "response"))
+            predData <- cbind(predData, predict(models[len+i], gbmData, type = "response"))
+            names(predData)[2*i] <- paste("rf", i, sep = ".")
+            names(predData)[2*i+1] <- paste("gbm", i, sep = ".")
+      }
+      predData$out <- rowSums(predData[, -1]) / (2*len)
+      names(predData)[2*len+2] <- names(data)[outcome]
+      return(predData[, c(1, 2*len+2)])
+}
