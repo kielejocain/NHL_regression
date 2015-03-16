@@ -1,20 +1,39 @@
 source("~/workspace/NHL_regression/R3/setup.R")
 skaterstats <- nhlClean()
-gpModel <- nhlModel(2013, 2013, 3, seed = 404508)
-names(skaterstats)[gpModel[["cols"]]]
-cols <- c(1:3, 6, 15, 24, 30, 38:41)
-plotData <- skaterstats[skaterstats$season %in% c(2013, 2014), c(1, 2, 3)]
+fitData <- nhlShape(2010, 2010, outcome = 3)
+gpFactors <- nhlAnalyze(fitData, fitData, seed = 404508)
+gpFactors
+cols <- c(1:4, 30, 32, 38, 41, 46)
+fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
+controls <- list()
+controls[[1]] <- fitControl
+controls[[2]] <- fitControl
+controls[[3]] <- fitControl
+controls[[4]] <- fitControl
+gpModel <- nhlModel(2010, 2010, outcome = 3, cols = cols, methods = c("rf", "gbm", "knn", "svmLinear"),
+                    controls = controls, seed = 714537)
+gpCorrs <- nhlCorr(2010, 2014, 3, gpModel)
+gpModel2 <- nhlModel(2010, 2010, outcome = 3, cols = cols, methods = c("rf", "gbm", "svmLinear"),
+                     controls = controls, seed = 845856)
+gpCorrs2 <- nhlCorr(2010, 2014, 3, gpModel2)
+gpModel3 <- nhlModel(2013, 2013, outcome = 3, cols = cols, methods = c("rf", "gbm", "svmLinear"),
+                     controls = controls, seed = 244416)
+gpCorrs3 <- nhlCorr(2010, 2014, 3, gpModel3)
+gpModel4 <- nhlModel(2014, 2014, outcome = 3, cols = cols, methods = c("rf", "gbm", "svmLinear"),
+                     controls = controls, seed = 174896)
+gpCorrs4 <- nhlCorr(2010, 2014, 3, gpModel4)
+plotData <- skaterstats[skaterstats$season %in% c(2011, 2012), c(1, 2, 3)]
 plotData <- reshape(plotData, timevar = "season", idvar = "nhl_num", direction = "wide")
 plotData <- plotData[complete.cases(plotData), ]
-plotData$games_played.2013 <- plotData$games_played.2013 * 48
-plotData$games_played.2014 <- plotData$games_played.2014 * 82
-naiveCor <- cor(plotData$games_played.2013, plotData$games_played.2014)
-png(filename = "~/workspace/NHL_regression/graphics/GP/GP20141_naive.png")
-qplot(games_played.2014, games_played.2013, data = plotData, geom = c("smooth", "point"),
-      main = "Naive Model: Games Played, 2013 vs. 2014",
-      xlab = "Games Played in 2013", ylab = "Games Played in 2014")
+plotData$games_played.2011 <- plotData$games_played.2011 * 82
+plotData$games_played.2012 <- plotData$games_played.2012 * 82
+naiveCor <- cor(plotData$games_played.2011, plotData$games_played.2012)
+png(filename = "~/workspace/NHL_regression/graphics/GP/GP20121_naive.png")
+qplot(games_played.2012, games_played.2011, data = plotData, geom = c("smooth", "point"),
+      main = "Naive Model: Games Played, 2011 vs. 2012",
+      xlab = "Games Played in 2011", ylab = "Games Played in 2012")
 dev.off()
-gpTest <- nhlModel(2010, 2010, 3, cols = cols, seed = 794825)
+results2011 <- nhlPredict(2010, 2010, 3, gpModel)
 corData <- nhlShape(2010, 2010, cols = cols, outcome = 3, rm.nhlnum = FALSE)
 corData <- merge(corData, nhlPredict(2009, 2010, 3, gpTest))
 corData$rf[corData$rf > 1] <- 1

@@ -83,7 +83,7 @@ nhlClean <- function(data = skaterstats) {
 #
 # returns a random forest model object.
 
-nhlBuild <- function(data, type = "rf", perc = 1, seed = NA, distribution = "gaussian", ...) {
+nhlBuild <- function(data, method = "rf", perc = 1, seed = NA, ...) {
       if (!is.na(seed)){
             set.seed(seed)
       }
@@ -94,59 +94,50 @@ nhlBuild <- function(data, type = "rf", perc = 1, seed = NA, distribution = "gau
       } else {
             training <- data
       }
-      if (type == "rf") {
-            model <- randomForest(outcome ~ ., data = training, importance = TRUE, ...)
-      } else if (type == "gbm") {
-            # n.trees = 10000, cv.folds = 5, n.cores = 4
-            model <- gbm(outcome ~ ., data = training, distribution = distribution, ...)
-      }
+      model <- train(outcome ~ ., data = training, method = method, ...)
       if (perc < 1) {
-            corr <- cor(testing$outcome, predict(model, testing, type = "response"))
-            print(corr)
+            corr <- cor(testing$outcome, predict(model, testing))
       }
+      else {
+            corr <- cor(training$outcome, predict(model,training))
+      }
+      print(corr)
       return(model)
-      }
+}
 
 
-nhlAnalyze <- function(rfdata, gbmdata, gbm.cutoff = 4, rf.cutoff = 15, distribution = "gaussian", seed = NA) {
+nhlAnalyze <- function(rfdata, gbmdata, gbm.cutoff = 4, rf.cutoff = 200, seed = NA) {
       if (!is.na(seed)) {
             set.seed(seed)
       }
-      rfmod1 <- nhlBuild(data = rfdata, perc = 0.7)
-      rfmod2 <- nhlBuild(data = rfdata, perc = 0.7)
-      rfmod3 <- nhlBuild(data = rfdata, perc = 0.7)
-      rfmod4 <- nhlBuild(data = rfdata, perc = 0.7)
-      rfsum1 <- data.frame(var = row.names(importance(rfmod1)),
-                           percIncMSE = importance(rfmod1)[, 1],
-                           incNodePur = importance(rfmod1)[, 2],
-                           row.names = NULL)
-      rfsum2 <- data.frame(var = row.names(importance(rfmod2)),
-                           percIncMSE = importance(rfmod2)[, 1],
-                           incNodePur = importance(rfmod2)[, 2],
-                           row.names = NULL)
-      rfsum3 <- data.frame(var = row.names(importance(rfmod3)),
-                           percIncMSE = importance(rfmod3)[, 1],
-                           incNodePur = importance(rfmod3)[, 2],
-                           row.names = NULL)
-      rfsum4 <- data.frame(var = row.names(importance(rfmod4)),
-                           percIncMSE = importance(rfmod4)[, 1],
-                           incNodePur = importance(rfmod4)[, 2],
-                           row.names = NULL)
+      rfmod1 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE)
+      rfmod2 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE)
+      rfmod3 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE)
+      rfmod4 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE)
+      rfsum1 <- data.frame(var = row.names(varImp(rfmod1)[['importance']]),
+                           imp = varImp(rfmod1)[['importance']]$Overall)
+      rfsum2 <- data.frame(var = row.names(varImp(rfmod2)[['importance']]),
+                           imp = varImp(rfmod2)[['importance']]$Overall)
+      rfsum3 <- data.frame(var = row.names(varImp(rfmod3)[['importance']]),
+                           imp = varImp(rfmod3)[['importance']]$Overall)
+      rfsum4 <- data.frame(var = row.names(varImp(rfmod4)[['importance']]),
+                           imp = varImp(rfmod4)[['importance']]$Overall)
       rfsum <- merge(rfsum1, rfsum2, by = 1, suffixes = c(".1", ".2"))
       rfsumm <- merge(rfsum3, rfsum4, by = 1, suffixes = c(".3", ".4"))
       rfsum <- merge(rfsum, rfsumm)
-      rfsum$rf.tot <- rfsum$percIncMSE.1 + rfsum$percIncMSE.2 + rfsum$percIncMSE.3 + rfsum$percIncMSE.4
+      rfsum$rf.tot <- rfsum$imp.1 + rfsum$imp.2 + rfsum$imp.3 + rfsum$imp.4
       rfsum <- rfsum[order(rfsum$rf.tot, decreasing = TRUE),]
-      rfsum <- rfsum[rfsum$rf.tot > rf.cutoff, c(1, 10)]
+      rfsum <- rfsum[rfsum$rf.tot > rf.cutoff, c(1, 6)]
       row.names(rfsum) <- NULL
-      gbmmod1 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, distribution = distribution, 
-                          n.trees = 10000, cv.folds = 5, n.cores = 4)
-      gbmmod2 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, distribution = distribution, 
-                          n.trees = 10000, cv.folds = 5, n.cores = 4)
-      gbmmod3 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, distribution = distribution, 
-                          n.trees = 10000, cv.folds = 5, n.cores = 4)
-      gbmmod4 <- nhlBuild(data = gbmdata, type = "gbm", perc = 0.7, distribution = distribution, 
-                          n.trees = 10000, cv.folds = 5, n.cores = 4)
+      fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
+      gbmmod1 <- nhlBuild(data = gbmdata, method = "gbm", perc = 0.7, 
+                          trControl = fitControl)
+      gbmmod2 <- nhlBuild(data = gbmdata, method = "gbm", perc = 0.7, 
+                          trControl = fitControl)
+      gbmmod3 <- nhlBuild(data = gbmdata, method = "gbm", perc = 0.7, 
+                          trControl = fitControl)
+      gbmmod4 <- nhlBuild(data = gbmdata, method = "gbm", perc = 0.7, 
+                          trControl = fitControl)
       gbmsum1 <- as.data.frame(summary(gbmmod1, plotit=FALSE))
       gbmsum2 <- as.data.frame(summary(gbmmod2, plotit=FALSE))
       gbmsum3 <- as.data.frame(summary(gbmmod3, plotit=FALSE))
@@ -165,14 +156,15 @@ nhlAnalyze <- function(rfdata, gbmdata, gbm.cutoff = 4, rf.cutoff = 15, distribu
       return(output)
 }
 
-nhlModel <- function(start, end, outcome, data = skaterstats, cols = NA,
-                     rf.cutoff = 30, gbm.cutoff = 10, seed = NA, distribution = "gaussian") {
+nhlModel <- function(start, end, outcome, data = skaterstats, cols = NA, methods = c("rf", "gbm"), controls = NA,
+                     rf.cutoff = 200, gbm.cutoff = 4, seed = NA) {
       if (is.na(cols[1])) {
             rfdata <- nhlShape(end, end, outcome = outcome, data = data)
             gbmdata <- nhlShape(start, end, outcome = outcome, data = data)
             print(paste("Preliminary analysis on", names(data)[outcome]))
             factorMatrix <- nhlAnalyze(rfdata, gbmdata, gbm.cutoff = gbm.cutoff,
-                                       rf.cutoff = rf.cutoff, distribution = distribution, seed = seed)
+                                       rf.cutoff = rf.cutoff, seed = seed)
+            print(factorMatrix)
             factors <- as.vector(factorMatrix[complete.cases(factorMatrix), 1])
             factors <- strsplit(factors, ".", fixed = TRUE)
             cols <- vector()
@@ -185,51 +177,75 @@ nhlModel <- function(start, end, outcome, data = skaterstats, cols = NA,
                   stop("No factors; please lower your cutoffs.")
             }   
       }
-      print("Building data sets")
-      modData <- list()
-      modData[[1]] <- nhlShape(end, end, cols = cols, outcome = outcome, data = data, rm.nhlnum = F)
-      modData[[2]] <- nhlShape(start, end, cols = cols, outcome = outcome,
+      print("Building data set")
+      modData <- nhlShape(start, end, cols = cols, outcome = outcome,
                                            data = data, rm.nhlnum = F, rm.NA = FALSE)
+      inTrain <- createDataPartition(modData$outcome, list = FALSE)
       models <- list()
       print("Building models")
-      print("Building random forest model")
-      models[["rf"]] <- nhlBuild(data = modData[[1]][, -1])
-      print("Building boosting model")
-      models[["gbm"]] <- nhlBuild(data = modData[[2]], type = "gbm",
-                                    distribution = distribution, n.trees = 10000,
-                                    cv.folds = 5, n.cores = 4)
-      predData <- as.data.frame(modData[[1]]$nhl_num)
+      for(i in 1:length(methods)){
+            print(paste("Applying", methods[i], "method"))
+            if (!is.null(controls[[i]])){
+                  models[[methods[i]]] <- nhlBuild(data = modData[inTrain, -1], method = methods[i],
+                                                   trControl = controls[[i]])
+            } else {
+                  models[[methods[i]]] <- nhlBuild(data = modData[inTrain, -1], method = methods[i])
+            }
+      }
+      predData <- as.data.frame(modData[-inTrain, 1])
       names(predData)[1] <- "nhl_num"
       print("Assembling data for cumulative model")
-      temp <- predict(models[["rf"]], modData[[1]], type = "response")
-      temp <- as.data.frame(cbind(modData[[1]]$nhl_num, temp))
-      names(temp)[1] <- "nhl_num"
-      predData <- merge(predData, temp)
-      names(predData)[2] <- "rf"
-      temp <- predict(models[["gbm"]], modData[[2]], type = "response")
-      temp <- as.data.frame(cbind(modData[[2]]$nhl_num, temp))
-      names(temp)[1] <- "nhl_num"
-      predData <- merge(predData, temp)
-      names(predData)[3] <- "gbm"
-      predData <- merge(predData, modData[[1]][, c(1, length(names(modData[[1]])))])
+      for (i in 1:length(methods)) {
+            temp <- predict(models[[methods[i]]], modData[-inTrain, ])
+            temp <- as.data.frame(cbind(modData[-inTrain, 1], temp))
+            names(temp)[1] <- "nhl_num"
+            predData <- merge(predData, temp)
+            names(predData)[i+1] <- methods[i]
+      }
+      predData <- merge(predData, modData[-inTrain, c(1, length(names(modData)))])
       models[["cols"]] <- cols
       print("Building cumulative model")
-      models[["model"]] <- lm(outcome ~ ., data = predData[, -1])
+      models[["model"]] <- nhlBuild(data = predData, method = "lm")
       return(models)
 }
 
 nhlPredict <- function (start, end, outcome, models, data = skaterstats) {
       cols = models[["cols"]]
-      rfData <- nhlShape(end, end, cols = cols, data = data, rm.nhlnum = FALSE)
-      gbmData <- nhlShape(start, end, cols = cols, data = data, rm.nhlnum = FALSE)
-      rfData <- rfData[rfData$nhl_num %in% gbmData$nhl_num, ]
-      predData <- as.data.frame(gbmData$nhl_num)
-      names(predData)[1] <- "nhl_num"
-      predData <- cbind(predData, predict(models[[1]], rfData, type = "response"))
-      names(predData)[2] <- "rf"
-      predData <- cbind(predData, predict(models[[2]], gbmData, type = "response"))
-      names(predData)[3] <- "gbm"
-      predData$out <- predict(models[["model"]], predData, type = "response")
-      names(predData)[4] <- names(data)[outcome]
+      cleanData <- nhlShape(start, end, cols = cols, outcome = outcome, data = data, rm.nhlnum = FALSE)
+      predData <- as.data.frame(cleanData$nhl_num)
+      predData <- cbind(predData, cleanData$outcome)
+      names(predData) <- c("nhl_num", "outcome")
+      for (i in 1:(length(models) - 2)) {
+            predData <- cbind(predData, predict(models[[names(models)[i]]], cleanData))
+            names(predData)[i+2] <- names(models)[i]
+      }
+      predData$out <- predict(models[["model"]], predData)
+      names(predData)[length(models) + 1] <- names(data)[outcome]
       return(predData)
+}
+
+nhlCorr <- function (start, end, outcome, models, data = skaterstats) {
+      cols = models[["cols"]]
+      output = as.data.frame(matrix(nrow = (end - start + 1), ncol = length(names(models))))
+      names(output)[1] = "naive"
+      for (i in 1:(length(names(models)) - 2)) {
+            names(output)[i+1] <- names(models)[i]
+      }
+      names(output)[length(names(models))] <- "cumulative"
+      counter = 1
+      for (i in start:end) {
+            cleanData <- nhlShape(i, i, cols = cols, outcome = outcome, data = data, rm.nhlnum = F)
+            corData <- nhlPredict(i, i, outcome = outcome, models = models, data = data)
+            corData$avg <- rowSums(corData[, -c(1, 2, length(names(corData)))])
+            precursor <- which(names(cleanData) == paste(names(data)[outcome], ".1", sep=""))
+            output[counter, 1] <- cor(cleanData$outcome, cleanData[, precursor])
+            for (model in 1:(length(names(models)) - 2)) {
+                  output[counter, model + 1] <- cor(cleanData$outcome, corData[, model + 2])
+            }
+            output$cumulative[counter] <- cor(cleanData$outcome, corData[, length(names(corData)) - 1])
+            output$mean[counter] <- cor(cleanData$outcome, corData$avg)
+            counter <- counter + 1
+      }
+      row.names(output) <- c(start:end)
+      return(output)
 }
