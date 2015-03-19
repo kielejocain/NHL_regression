@@ -56,7 +56,7 @@ nhlShape <- function(start, end, cols = NA, outcome = NA, data = skaterstats,
 }
 
 nhlClean <- function(data = skaterstats) {
-      output <- data[, -c(3:5, 38:41)]
+      output <- data[, -c(3:5, 38:41, 49)]
       output$es_goals <- output$goals - output$pp_goals - output$sh_goals
       output$pp_assists <- output$pp_points - output$pp_goals
       output$sh_assists <- output$sh_points - output$sh_goals
