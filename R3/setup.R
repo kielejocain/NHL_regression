@@ -209,43 +209,56 @@ nhlModel <- function(start, end, outcome, data = skaterstats, cols = NA, methods
       return(models)
 }
 
-nhlPredict <- function (start, end, outcome, models, data = skaterstats) {
+nhlPredict <- function (start, end, outcome, models, data = skaterstats, naive = TRUE) {
       cols = models[["cols"]]
-      cleanData <- nhlShape(start, end, cols = cols, outcome = outcome, data = data, rm.nhlnum = FALSE)
+      if (!is.na(outcome)) {
+            cleanData <- nhlShape(start, end, cols = cols, outcome = outcome, data = data, rm.nhlnum = FALSE)      
+      } else {
+            cleanData <- nhlShape(start, end, cols = cols, data = data, rm.nhlnum = FALSE)
+      }
       predData <- as.data.frame(cleanData$nhl_num)
-      predData <- cbind(predData, cleanData$outcome)
-      names(predData) <- c("nhl_num", "outcome")
+      names(predData) <- c("nhl_num")
       for (i in 1:(length(models) - 2)) {
             predData <- cbind(predData, predict(models[[names(models)[i]]], cleanData))
-            names(predData)[i+2] <- names(models)[i]
+            names(predData)[i+1] <- names(models)[i]
       }
       predData$out <- predict(models[["model"]], predData)
-      names(predData)[length(models) + 1] <- names(data)[outcome]
+      names(predData)[length(models)] <- "cumulative"
+      if (!is.na(outcome)) {
+            predData <- cbind(predData, cleanData$outcome)
+            names(predData)[length(names(predData))] <- c("outcome")
+      }
+      if (naive) {
+            precursor <- which(names(cleanData) == paste(names(data)[outcome], ".1", sep=""))
+            predData <- cbind(predData, cleanData[, precursor])
+            names(predData)[length(names(predData))] <- c("naive")
+      }
       return(predData)
 }
 
 nhlCorr <- function (start, end, outcome, models, data = skaterstats) {
       cols = models[["cols"]]
-      output = as.data.frame(matrix(nrow = (end - start + 1), ncol = length(names(models))))
+      output = as.data.frame(matrix(nrow = (end - start + 1), ncol = length(names(models)) + 1))
       names(output)[1] = "naive"
       for (i in 1:(length(names(models)) - 2)) {
             names(output)[i+1] <- names(models)[i]
       }
       names(output)[length(names(models))] <- "cumulative"
+      names(output)[length(names(models)) + 1] <- "mean"
       counter = 1
       for (i in start:end) {
             cleanData <- nhlShape(i, i, cols = cols, outcome = outcome, data = data, rm.nhlnum = F)
             corData <- nhlPredict(i, i, outcome = outcome, models = models, data = data)
-            corData$avg <- rowSums(corData[, -c(1, 2, length(names(corData)))])
+            corData$mean <- rowMeans(corData[, -c(1, (length(names(corData))-2):length(names(corData)))])
             precursor <- which(names(cleanData) == paste(names(data)[outcome], ".1", sep=""))
-            output[counter, 1] <- cor(cleanData$outcome, cleanData[, precursor])
+            output[counter, 1] <- cor(corData$outcome, corData$naive)
             for (model in 1:(length(names(models)) - 2)) {
-                  output[counter, model + 1] <- cor(cleanData$outcome, corData[, model + 2])
+                  output[counter, model + 1] <- cor(corData$outcome, corData[, model + 1])
             }
-            output$cumulative[counter] <- cor(cleanData$outcome, corData[, length(names(corData)) - 1])
-            output$mean[counter] <- cor(cleanData$outcome, corData$avg)
+            output$cumulative[counter] <- cor(corData$outcome, corData$cumulative)
+            output$mean[counter] <- cor(corData$outcome, corData$mean)
             counter <- counter + 1
       }
-      row.names(output) <- c(start:end)
+      row.names(output) <- c(start:end) + 1
       return(output)
 }
