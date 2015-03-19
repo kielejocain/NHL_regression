@@ -1,5 +1,6 @@
 R/full_retrieve.R
 R/Compilation.Rmd
+graphics/
 .Rproj.user
 .Rhistory
 *.Rproj

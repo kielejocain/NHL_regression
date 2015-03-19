@@ -19,6 +19,7 @@ dbDisconnect(conn)
 library(caret)
 library(randomForest)
 library(gbm)
+library(gridExtra)
 
 # The nhlShape function takes a subset of the data in the skaterstats format
 #
