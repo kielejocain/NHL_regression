@@ -25,26 +25,16 @@ gpCorrs4 <- nhlCorr(2010, 2013, 3, gpModel4)
 preds2013 <- nhlPredict(2012, 2012, gpModel4, outcome = 3)
 preds2014 <- nhlPredict(2013, 2013, gpModel4, outcome = 3)
 preds2013$rf[preds2013$rf > 1] <- 1
-preds2013$rf <- preds2013$rf * 48
 preds2013$gbm[preds2013$gbm > 1] <- 1
-preds2013$gbm <- preds2013$gbm * 48
 preds2013$svmLinear[preds2013$svmLinear > 1] <- 1
-preds2013$svmLinear <- preds2013$svmLinear * 48
 preds2013$cumulative[preds2013$cumulative > 1] <- 1
-preds2013$cumulative <- preds2013$cumulative * 48
-preds2013$outcome <- preds2013$outcome * 48
-preds2013$naive <- preds2013$naive * 48
+preds2013[, -1] <- preds2013[, -1] * 48
 preds2013$mean <- (preds2013$rf + preds2013$gbm + preds2013$svmLinear) / 3
 preds2014$rf[preds2014$rf > 1] <- 1
-preds2014$rf <- preds2014$rf * 82
 preds2014$gbm[preds2014$gbm > 1] <- 1
-preds2014$gbm <- preds2014$gbm * 82
-preds2014$svmLinear[preds2014svmLinear > 1] <- 1
-preds2014$svmLinear <- preds2014$svmLinear * 82
+preds2014$svmLinear[preds2014$svmLinear > 1] <- 1
 preds2014$cumulative[preds2014$cumulative > 1] <- 1
-preds2014$cumulative <- preds2014$cumulative * 82
-preds2014$outcome <- preds2014$outcome * 82
-preds2014$naive <- preds2014$naive * 82
+preds2014[, -1] <- preds2014[, -1] * 82
 preds2014$mean <- (preds2014$rf + preds2014$gbm + preds2014$svmLinear) / 3
 corr <- round(gpCorrs4["2014", "naive"], digits = 4)
 plot14naive <- ggplot(preds2014, aes(x=naive, y=outcome)) +
