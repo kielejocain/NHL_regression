@@ -40,7 +40,7 @@ corr <- round(gpCorrs4["2014", "naive"], digits = 4)
 plot14naive <- ggplot(preds2014, aes(x=naive, y=outcome)) +
       geom_smooth() + geom_point() + 
       ggtitle(paste("Naive Model: Games Played, 2013 vs. 2014 (r = ", corr, ")", sep = "")) +
-      xlab("Games Played in 2013") + ylab("Games Played in 2014")
+      xlab("Games Played in 2013 (Scaled)") + ylab("Games Played in 2014")
 corr <- round(gpCorrs4["2014", "rf"], digits = 4)
 plot14rf <- ggplot(preds2014, aes(x=rf, y=outcome)) +
       geom_smooth() + geom_point() + 
@@ -92,7 +92,7 @@ corr <- round(gpCorrs4["2013", "naive"], digits = 4)
 plot13naive <- ggplot(preds2013, aes(x=naive, y=outcome)) +
       geom_smooth() + geom_point() + 
       ggtitle(paste("Naive Model: Games Played, 2012 vs. 2013 (r = ", corr, ")", sep = "")) +
-      xlab("Games Played in 2012") + ylab("Games Played in 2013")
+      xlab("Games Played in 2012 (Scaled)") + ylab("Games Played in 2013")
 corr <- round(gpCorrs4["2013", "rf"], digits = 4)
 plot13rf <- ggplot(preds2013, aes(x=rf, y=outcome)) +
       geom_smooth() + geom_point() + 
