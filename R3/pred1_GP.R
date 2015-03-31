@@ -1,16 +1,17 @@
 source("~/workspace/NHL_regression/R3/setup.R")
 skaterstats <- nhlClean()
 fitData <- nhlShape(2010, 2010, outcome = 3)
-gpFactors <- nhlAnalyze(fitData, fitData, seed = 404508)
+gpFactors <- nhlAnalyze(fitData, fitData, seed = 243012)
 gpFactors
-cols <- c(1:4, 30, 32, 38, 41, 46)
+cols <- c(1:4, 15, 30:32, 38:41, 45:46)
 fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
 controls <- list()
 controls[[1]] <- fitControl
 controls[[2]] <- fitControl
 controls[[3]] <- fitControl
 controls[[4]] <- fitControl
-# gpModel <- nhlModel(2010, 2010, outcome = 3, cols = cols, methods = c("rf", "gbm", "knn", "svmLinear"),
+controls[[5]] <- fitControl
+# gpModel <- nhlModel(2010, 2010, outcome = 3, cols = cols, methods = c("rf", "gbm", "pls", "knn", "svmLinear"),
 #                     controls = controls, seed = 714537)
 # gpCorrs <- nhlCorr(2010, 2013, 3, gpModel)
 # gpModel2 <- nhlModel(2010, 2010, outcome = 3, cols = cols, methods = c("rf", "gbm", "svmLinear"),
@@ -141,12 +142,13 @@ png(width = 960, height = 960,
 grid.arrange(plot13naive, plot13rf, plot13gbm, plot13svm, plot13cum, plot13mean, ncol = 2)
 dev.off()
 preds2015 <- nhlPredict(2014, 2014, gpModel4, outcome = 3)
-preds2015$rf <- preds2015$rf * 82
-preds2015$gbm <- preds2015$gbm * 82
-preds2015$svmLinear <- preds2015$svmLinear * 82
-preds2015$games_played <- (preds2015$rf + preds2015$gbm + preds2015$svmLinear) / 3
+# preds2015$rf <- preds2015$rf * 82
+# preds2015$gbm <- preds2015$gbm * 82
+# preds2015$svmLinear <- preds2015$svmLinear * 82
+# preds2015$games_played <- (preds2015$rf + preds2015$gbm + preds2015$svmLinear) / 3
+preds2015$games_played <- preds2015$cumulative * 82
 preds2015$games_played[preds2015$games_played > 82] <- 82
-output <- pred2015[, c("nhl_num", "games_played")]
+output <- preds2015[, c("nhl_num", "games_played")]
 conn <- dbConnect(driv, dbname = "nhltest", user = "postgres",
                   password = "hollyleaf", host = "localhost")
 dbWriteTable(conn, "newskatpred15", output, overwrite=TRUE, row.names = FALSE)

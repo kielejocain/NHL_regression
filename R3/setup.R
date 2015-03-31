@@ -107,14 +107,19 @@ nhlBuild <- function(data, method = "rf", perc = 1, seed = NA, ...) {
 }
 
 
-nhlAnalyze <- function(rfdata, gbmdata, gbm.cutoff = 4, rf.cutoff = 200, seed = NA) {
+nhlAnalyze <- function(rfdata, gbmdata, gbm.cutoff = 4, rf.cutoff = 100, seed = NA) {
       if (!is.na(seed)) {
             set.seed(seed)
       }
-      rfmod1 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE)
-      rfmod2 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE)
-      rfmod3 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE)
-      rfmod4 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE)
+      fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
+      rfmod1 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE,
+                         trControl = fitControl)
+      rfmod2 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE, 
+                         trControl = fitControl)
+      rfmod3 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE,
+                         trControl = fitControl)
+      rfmod4 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE,
+                         trControl = fitControl)
       rfsum1 <- data.frame(var = row.names(varImp(rfmod1)[['importance']]),
                            imp = varImp(rfmod1)[['importance']]$Overall)
       rfsum2 <- data.frame(var = row.names(varImp(rfmod2)[['importance']]),
@@ -130,7 +135,6 @@ nhlAnalyze <- function(rfdata, gbmdata, gbm.cutoff = 4, rf.cutoff = 200, seed = 
       rfsum <- rfsum[order(rfsum$rf.tot, decreasing = TRUE),]
       rfsum <- rfsum[rfsum$rf.tot > rf.cutoff, c(1, 6)]
       row.names(rfsum) <- NULL
-      fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
       gbmmod1 <- nhlBuild(data = gbmdata, method = "gbm", perc = 0.7, 
                           trControl = fitControl)
       gbmmod2 <- nhlBuild(data = gbmdata, method = "gbm", perc = 0.7, 

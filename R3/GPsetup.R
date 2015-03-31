@@ -1,10 +1,9 @@
-cols <- c(1:4, 30, 32, 38, 41, 46)
+cols <- c(1:4, 15, 30:32, 38:41, 45:46)
 fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
 controls <- list()
 controls[[1]] <- fitControl
 controls[[2]] <- fitControl
 controls[[3]] <- fitControl
-controls[[4]] <- fitControl
 gpModel4 <- nhlModel(2013, 2013, outcome = 3, cols = cols, methods = c("rf", "gbm", "svmLinear"),
                      controls = controls, seed = 174896)
 preds2013 <- nhlPredict(2012, 2012, gpModel4, outcome = 3)

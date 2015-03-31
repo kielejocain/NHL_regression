@@ -12,23 +12,24 @@ dbClearResult(rs)
 dbDisconnect(conn)
 
 ## factor analysis
-# fitData <- nhlShape(2010, 2010, outcome = 42)
-# esgFactors <- nhlAnalyze(fitData, fitData, seed = 492472)
-# esgFactors
+fitData <- nhlShape(2010, 2010, outcome = 42)
+esgFactors <- nhlAnalyze(fitData, fitData, seed = 947424)
+esgFactors
 
 ## model building
-cols = c(1:2, 4, 15, 29:30, 32:34, 42, 46)
+cols = c(1:2, 4, 15, 29:30, 32:34, 38:41, 42, 46)
 fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
 controls <- list()
 controls[[1]] <- fitControl
 controls[[2]] <- fitControl
 controls[[3]] <- fitControl
 controls[[4]] <- fitControl
-# esgModel <- nhlModel(2013, 2013, outcome = 42, cols = cols, methods = c("rf", "gbm", "knn", "svmLinear"),
-#                      controls = controls, seed = 292255)
-# esgCorrs <- nhlCorr(2010, 2013, 42, esgModel)
+controls[[5]] <- fitControl
+esgModel <- nhlModel(2013, 2013, outcome = 42, cols = cols, methods = c("rf", "gbm", "knn", "pls", "svmLinear"),
+                     controls = controls, seed = 665066)
+esgCorrs <- nhlCorr(2010, 2013, 42, esgModel)
 esgModel2 <- nhlModel(2013, 2013, outcome = 42, cols = cols, methods = c("rf", "gbm", "svmLinear"),
-                     controls = controls, seed = 38563)
+                     controls = controls, seed = 485181)
 esgCorrs2 <- nhlCorr(2010, 2013, 42, esgModel2)
 
 ## prediction shaping
@@ -171,18 +172,27 @@ dev.off()
 
 ## predicting ESG for 2015
 preds2015 <- nhlPredict(2014, 2014, esgModel2, outcome = 42)
-preds2015$rf[preds2015$rf > 1] <- 1
-preds2015$rf[preds2015$rf < 0] <- 0
-preds2015$gbm[preds2015$gbm > 1] <- 1
-preds2015$gbm[preds2015$gbm < 0] <- 0
-preds2015$svmLinear[preds2015$svmLinear > 1] <- 1
-preds2015$svmLinear[preds2015$svmLinear < 0] <- 0
 preds2015$cumulative[preds2015$cumulative > 1] <- 1
 preds2015$cumulative[preds2015$cumulative < 0] <- 0
 preds2015 <- merge(output[, 1:2], preds2015)
-preds2015[, 3:5] <- preds2015[, 3:5] * preds2015$games_played
-preds2015$es_goals <- (preds2015$rf + preds2015$gbm + preds2015$svmLinear) / 3
-output <- merge(output, preds2015[, c(1, 9)])
+output$es_goals <- preds2015$cumulative * preds2015$games_played
+
+## factor analysis
+fitData <- nhlShape(2010, 2010, outcome = 11)
+shgFactors <- nhlAnalyze(fitData, fitData, seed = 94072)
+shgFactors
+cols <- c(1:2, 11, 15, 27, 29, 32:34, 38:42)
+
+## model building
+shgModel <- nhlModel(2013, 2013, outcome = 11, cols = cols, methods = c("rf", "gbm", "knn", "pls", "svmLinear"),
+                     controls = controls, seed = 724610)
+shgCorrs <- nhlCorr(2010, 2013, 11, shgModel)
+shgModel2 <- nhlModel(2013, 2013, outcome = 11, cols = cols, methods = c("rf", "gbm", "knn", "pls"),
+                     controls = controls, seed = 488239)
+shgCorrs2 <- nhlCorr(2010, 2013, 11, shgModel2)
+shgModel3 <- nhlModel(2013, 2013, outcome = 11, cols = cols, methods = c("rf", "gbm", "knn"),
+                      controls = controls, seed = 418294)
+shgCorrs3 <- nhlCorr(2010, 2013, 11, shgModel3)
 
 ## factor analysis
 fitData <- nhlShape(2010, 2010, outcome = 9)
