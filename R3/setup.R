@@ -161,53 +161,80 @@ nhlAnalyze <- function(rfdata, gbmdata, gbm.cutoff = 4, rf.cutoff = 100, seed = 
       return(output)
 }
 
-nhlModel <- function(start, end, outcome, data = skaterstats, cols = NA, methods = c("rf", "gbm"), controls = NA,
-                     rf.cutoff = 200, gbm.cutoff = 4, seed = NA) {
-      if (is.na(cols[1])) {
-            rfdata <- nhlShape(end, end, outcome = outcome, data = data)
-            gbmdata <- nhlShape(start, end, outcome = outcome, data = data)
-            print(paste("Preliminary analysis on", names(data)[outcome]))
-            factorMatrix <- nhlAnalyze(rfdata, gbmdata, gbm.cutoff = gbm.cutoff,
-                                       rf.cutoff = rf.cutoff, seed = seed)
-            print(factorMatrix)
-            factors <- as.vector(factorMatrix[complete.cases(factorMatrix), 1])
-            factors <- strsplit(factors, ".", fixed = TRUE)
-            cols <- vector()
-            for (i in 1:length(factors)) {
-                  cols[i] <- which(names(data) == factors[[i]][1])
-            }
-            cols <- c(1, 2, cols[order(cols)])
-            if (length(cols) == 2) {
-                  print(factorMatrix[1, ])
-                  stop("No factors; please lower your cutoffs.")
-            }   
+nhlAnalyze2 <- function(data, method = "rf", cutoff = 0, seed = NA) {
+      if (!is.na(seed)) {
+            set.seed(seed)
       }
-      print("Building data set")
-      modData <- nhlShape(start, end, cols = cols, outcome = outcome,
-                                           data = data, rm.nhlnum = F, rm.NA = FALSE)
-      inTrain <- createDataPartition(modData$outcome, list = FALSE)
+      fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
+      if (method == "rf") {
+            model1 <- nhlBuild(data = data, method = method, perc = 0.7, importance = TRUE,
+                               trControl = fitControl)
+            model2 <- nhlBuild(data = data, method = method, perc = 0.7, importance = TRUE,
+                               trControl = fitControl)
+            model3 <- nhlBuild(data = data, method = method, perc = 0.7, importance = TRUE,
+                               trControl = fitControl)
+            model4 <- nhlBuild(data = data, method = method, perc = 0.7, importance = TRUE,
+                               trControl = fitControl)
+      } else {
+            model1 <- nhlBuild(data = data, method = method, perc = 0.7,
+                               trControl = fitControl)
+            model2 <- nhlBuild(data = data, method = method, perc = 0.7,
+                               trControl = fitControl)
+            model3 <- nhlBuild(data = data, method = method, perc = 0.7,
+                               trControl = fitControl)
+            model4 <- nhlBuild(data = data, method = method, perc = 0.7,
+                               trControl = fitControl)     
+      }
+      sum1 <- data.frame(var = row.names(varImp(model1)[['importance']]),
+                         imp = varImp(model1)[['importance']]$Overall)
+      sum2 <- data.frame(var = row.names(varImp(model2)[['importance']]),
+                         imp = varImp(model2)[['importance']]$Overall)
+      sum3 <- data.frame(var = row.names(varImp(model3)[['importance']]),
+                         imp = varImp(model3)[['importance']]$Overall)
+      sum4 <- data.frame(var = row.names(varImp(model4)[['importance']]),
+                         imp = varImp(model4)[['importance']]$Overall)
+      sum <- merge(sum1, sum2, by = 1, suffixes = c(".1", ".2"))
+      summ <- merge(sum3, sum4, by = 1, suffixes = c(".3", ".4"))
+      sum <- merge(sum, summ)
+      sum$tot <- rowSums(sum[, 2:5])
+      sum <- sum[order(sum$tot, decreasing = TRUE),]
+      sum <- sum[sum$tot > cutoff, c(1, 6)]
+      row.names(sum) <- NULL
+      return(sum)
+}
+
+nhlModel <- function(start, end, outcome, cols, data = skaterstats, methods = c("rf", "gbm"), controls = NA,
+                     rf.cutoff = 200, gbm.cutoff = 4, seed = NA) {
+      print("Building data sets")
+      modData <- list()
+      for (i in 1:length(methods)) {
+            modData[[i]] <- nhlShape(start, end, cols = cols[[methods[i]]], outcome = outcome,
+                                data = data, rm.nhlnum = F, rm.NA = FALSE)
+      }
+      inTrain <- createDataPartition(modData[[1]]$outcome, list = FALSE)
       models <- list()
+      predData <- list()
       print("Building models")
       for(i in 1:length(methods)){
             print(paste("Applying", methods[i], "method"))
             if (!is.null(controls[[i]])){
-                  models[[methods[i]]] <- nhlBuild(data = modData[inTrain, -1], method = methods[i],
+                  models[[methods[i]]] <- nhlBuild(data = modData[[i]][inTrain, -1], method = methods[i],
                                                    trControl = controls[[i]])
             } else {
-                  models[[methods[i]]] <- nhlBuild(data = modData[inTrain, -1], method = methods[i])
+                  models[[methods[i]]] <- nhlBuild(data = modData[[i]][inTrain, -1], method = methods[i])
             }
       }
-      predData <- as.data.frame(modData[-inTrain, 1])
+      predData <- as.data.frame(modData[[1]][-inTrain, 1])
       names(predData)[1] <- "nhl_num"
       print("Assembling data for cumulative model")
       for (i in 1:length(methods)) {
-            temp <- predict(models[[methods[i]]], modData[-inTrain, ])
-            temp <- as.data.frame(cbind(modData[-inTrain, 1], temp))
+            temp <- predict(models[[methods[i]]], modData[[i]][-inTrain, ])
+            temp <- as.data.frame(cbind(modData[[i]][-inTrain, 1], temp))
             names(temp)[1] <- "nhl_num"
             predData <- merge(predData, temp)
             names(predData)[i+1] <- methods[i]
       }
-      predData <- merge(predData, modData[-inTrain, c(1, length(names(modData)))])
+      predData <- merge(predData, modData[[1]][-inTrain, c(1, length(names(modData[[1]])))])
       models[["cols"]] <- cols
       print("Building cumulative model")
       models[["model"]] <- nhlBuild(data = predData, method = "lm")
@@ -216,26 +243,24 @@ nhlModel <- function(start, end, outcome, data = skaterstats, cols = NA, methods
 
 nhlPredict <- function (start, end, outcome, models, data = skaterstats, naive = TRUE) {
       cols = models[["cols"]]
-      if (!is.na(outcome)) {
-            cleanData <- nhlShape(start, end, cols = cols, outcome = outcome, data = data, rm.nhlnum = FALSE)      
-      } else {
-            cleanData <- nhlShape(start, end, cols = cols, data = data, rm.nhlnum = FALSE)
+      cleanData <- list()
+      for (i in 1:(length(names(models)) - 2)) {
+            cleanData[[i]] <- nhlShape(start, end, cols = cols[[names(models[i])]], 
+                                       outcome = outcome, data = data, rm.nhlnum = F)
       }
-      predData <- as.data.frame(cleanData$nhl_num)
+      predData <- as.data.frame(cleanData[[1]]$nhl_num)
       names(predData) <- c("nhl_num")
       for (i in 1:(length(models) - 2)) {
-            predData <- cbind(predData, predict(models[[names(models)[i]]], cleanData))
+            predData <- cbind(predData, predict(models[[names(models)[i]]], cleanData[[i]]))
             names(predData)[i+1] <- names(models)[i]
       }
       predData$out <- predict(models[["model"]], predData)
       names(predData)[length(models)] <- "cumulative"
-      if (!is.na(outcome)) {
-            predData <- cbind(predData, cleanData$outcome)
-            names(predData)[length(names(predData))] <- c("outcome")
-      }
+      predData <- cbind(predData, cleanData[[1]]$outcome)
+      names(predData)[length(names(predData))] <- c("outcome")
       if (naive) {
-            precursor <- which(names(cleanData) == paste(names(data)[outcome], ".1", sep=""))
-            predData <- cbind(predData, cleanData[, precursor])
+            precursor <- which(names(cleanData[[1]]) == paste(names(data)[outcome], ".1", sep=""))
+            predData <- cbind(predData, cleanData[[1]][, precursor])
             names(predData)[length(names(predData))] <- c("naive")
       }
       return(predData)
@@ -251,11 +276,15 @@ nhlCorr <- function (start, end, outcome, models, data = skaterstats) {
       names(output)[length(names(models))] <- "cumulative"
       names(output)[length(names(models)) + 1] <- "mean"
       counter = 1
-      for (i in start:end) {
-            cleanData <- nhlShape(i, i, cols = cols, outcome = outcome, data = data, rm.nhlnum = F)
-            corData <- nhlPredict(i, i, outcome = outcome, models = models, data = data)
+      for (year in start:end) {
+            cleanData <- list()
+            for (i in 1:(length(names(models)) - 2)) {
+                  cleanData[[i]] <- nhlShape(year, year, cols = cols[[names(models[i])]], 
+                                             outcome = outcome, data = data, rm.nhlnum = F)
+            }
+            corData <- nhlPredict(year, year, outcome = outcome, models = models, data = data)
             corData$mean <- rowMeans(corData[, -c(1, (length(names(corData))-2):length(names(corData)))])
-            precursor <- which(names(cleanData) == paste(names(data)[outcome], ".1", sep=""))
+            precursor <- which(names(cleanData[[1]]) == paste(names(data)[outcome], ".1", sep=""))
             output[counter, 1] <- cor(corData$outcome, corData$naive)
             for (model in 1:(length(names(models)) - 2)) {
                   output[counter, model + 1] <- cor(corData$outcome, corData[, model + 1])

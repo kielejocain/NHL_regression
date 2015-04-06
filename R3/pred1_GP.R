@@ -1,9 +1,28 @@
+## define custom functions, call data from the database
 source("~/workspace/NHL_regression/R3/setup.R")
+
+## clean the data
 skaterstats <- nhlClean()
-fitData <- nhlShape(2010, 2010, outcome = 3)
-gpFactors <- nhlAnalyze(fitData, fitData, seed = 243012)
-gpFactors
-cols <- c(1:4, 15, 30:32, 38:41, 45:46)
+skaterstats <- merge(skaterstats, skaters[, 3:4])
+skaterstats$player_position <- as.factor(skaterstats$player_position)
+
+## subset the data and build test models, then look at importance output
+# fitData <- nhlShape(2011, 2011, outcome = 3)
+# gpFactors.rf <- nhlAnalyze2(fitData, seed = 203622)
+# gpFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 654566)
+# gpFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 847244)
+# gpFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 174633)
+# gpFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 287174)
+
+## use the importance output to select factors
+cols <- list()
+cols[["rf"]] <- c(1:6, 15, 24, 31:32, 38:42, 45:46)
+cols[["gbm"]] <- c(1:3, 15, 24, 31:32, 38:42, 45:46)
+cols[["pls"]] <- c(1:3, 16, 33:34, 38:41)
+cols[["knn"]] <- c(1:6, 15:16, 24, 26, 30:32, 38:42, 45:46)
+cols[["svmLinear"]] <- c(1:6, 15:16, 24:27, 30:32, 38:42, 45:46)
+
+## build single models, ensemble the models, and look at correlations
 fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
 controls <- list()
 controls[[1]] <- fitControl
@@ -11,18 +30,20 @@ controls[[2]] <- fitControl
 controls[[3]] <- fitControl
 controls[[4]] <- fitControl
 controls[[5]] <- fitControl
-# gpModel <- nhlModel(2010, 2010, outcome = 3, cols = cols, methods = c("rf", "gbm", "pls", "knn", "svmLinear"),
+# gpModel <- nhlModel(2011, 2011, outcome = 3, cols = cols, methods = c("rf", "gbm", "pls", "knn", "svmLinear"),
 #                     controls = controls, seed = 714537)
 # gpCorrs <- nhlCorr(2010, 2013, 3, gpModel)
-# gpModel2 <- nhlModel(2010, 2010, outcome = 3, cols = cols, methods = c("rf", "gbm", "svmLinear"),
+# gpModel2 <- nhlModel(2010, 2010, outcome = 3, cols = cols, methods = c("rf", "gbm", "pls", "knn", "svmLinear"),
 #                      controls = controls, seed = 845856)
 # gpCorrs2 <- nhlCorr(2010, 2013, 3, gpModel2)
-# gpModel3 <- nhlModel(2013, 2013, outcome = 3, cols = cols, methods = c("rf", "gbm", "svmLinear"),
+# gpModel3 <- nhlModel(2010, 2010, outcome = 3, cols = cols, methods = c("rf", "gbm", "svmLinear"),
 #                      controls = controls, seed = 244416)
 # gpCorrs3 <- nhlCorr(2010, 2013, 3, gpModel3)
 gpModel4 <- nhlModel(2013, 2013, outcome = 3, cols = cols, methods = c("rf", "gbm", "svmLinear"),
                      controls = controls, seed = 174896)
 gpCorrs4 <- nhlCorr(2010, 2013, 3, gpModel4)
+
+## prediction shaping
 preds2013 <- nhlPredict(2012, 2012, gpModel4, outcome = 3)
 preds2014 <- nhlPredict(2013, 2013, gpModel4, outcome = 3)
 preds2013$rf[preds2013$rf > 1] <- 1
@@ -37,6 +58,8 @@ preds2014$svmLinear[preds2014$svmLinear > 1] <- 1
 preds2014$cumulative[preds2014$cumulative > 1] <- 1
 preds2014[, -1] <- preds2014[, -1] * 82
 preds2014$mean <- (preds2014$rf + preds2014$gbm + preds2014$svmLinear) / 3
+
+## graphing
 corr <- round(gpCorrs4["2014", "naive"], digits = 4)
 plot14naive <- ggplot(preds2014, aes(x=naive, y=outcome)) +
       geom_smooth() + geom_point() + 
@@ -141,13 +164,15 @@ png(width = 960, height = 960,
     filename = "~/workspace/NHL_regression/graphics/GP/GP2013_full.png")
 grid.arrange(plot13naive, plot13rf, plot13gbm, plot13svm, plot13cum, plot13mean, ncol = 2)
 dev.off()
+
+## printing output to database
 preds2015 <- nhlPredict(2014, 2014, gpModel4, outcome = 3)
-# preds2015$rf <- preds2015$rf * 82
-# preds2015$gbm <- preds2015$gbm * 82
-# preds2015$svmLinear <- preds2015$svmLinear * 82
-# preds2015$games_played <- (preds2015$rf + preds2015$gbm + preds2015$svmLinear) / 3
-preds2015$games_played <- preds2015$cumulative * 82
-preds2015$games_played[preds2015$games_played > 82] <- 82
+preds2015$rf <- preds2015$rf * 82
+preds2015$gbm <- preds2015$gbm * 82
+preds2015$svmLinear <- preds2015$svmLinear * 82
+preds2015$games_played <- (preds2015$rf + preds2015$gbm + preds2015$svmLinear) / 3
+# preds2015$games_played <- preds2015$cumulative * 82
+# preds2015$games_played[preds2015$games_played > 82] <- 82
 output <- preds2015[, c("nhl_num", "games_played")]
 conn <- dbConnect(driv, dbname = "nhltest", user = "postgres",
                   password = "hollyleaf", host = "localhost")
