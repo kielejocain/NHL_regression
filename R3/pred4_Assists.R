@@ -22,11 +22,12 @@ source("~/workspace/NHL_regression/R3/GPsetup.R")
 ## Even Strength Assists
 ## subset the data and build test models, then look at importance output
 # fitData <- nhlShape(2010, 2010, outcome = 45)
-# esaFactors.rf <- nhlAnalyze2(fitData, seed = 208335)
-# esaFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 273079)
-# esaFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 582900)
-# esaFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 865713)
-# esaFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 125759)
+# factControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
+# esaFactors.rf <- nhlAnalyze2(fitData, seed = 208335, importance = TRUE, trControl = factControl)
+# esaFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 273079, trControl = factControl)
+# esaFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 582900, trControl = factControl)
+# esaFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 865713, trControl = factControl)
+# esaFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 125759, trControl = factControl)
 
 ## use the importance output to select factors
 cols <- list()
@@ -160,11 +161,11 @@ output$es_assists <- preds2015$cumulative * preds2015$games_played
 ## Short-handed Assists
 ## subset the data and build test models, then look at importance output
 # fitData <- nhlShape(2010, 2010, outcome = 44)
-# shaFactors.rf <- nhlAnalyze2(fitData, seed = 985813)
-# shaFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 570838)
-# shaFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 234518)
-# shaFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 309764)
-# shaFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 854736)
+# shaFactors.rf <- nhlAnalyze2(fitData, seed = 985813, importance = TRUE, trControl = factControl)
+# shaFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 570838, trControl = factControl)
+# shaFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 234518, trControl = factControl)
+# shaFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 309764, trControl = factControl)
+# shaFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 854736, trControl = factControl)
 
 ## use the importance output to select factors
 cols[["rf"]] <- c(1:6, 8, 10, 24, 26:30, 32, 39:46)
@@ -293,11 +294,11 @@ output$sh_assists <- rowMeans(preds2015[, 3:5])
 ## Power Play Assists
 ## subset the data and build test models, then look at importance output
 # fitData <- nhlShape(2010, 2010, outcome = 43)
-# ppaFactors.rf <- nhlAnalyze2(fitData, seed = 369289)
-# ppaFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 242141)
-# ppaFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 187146)
-# ppaFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 90151)
-# ppaFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 868706)
+# ppaFactors.rf <- nhlAnalyze2(fitData, seed = 369289, importance = TRUE, trControl = factControl)
+# ppaFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 242141, trControl = factControl)
+# ppaFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 187146, trControl = factControl)
+# ppaFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 90151, trControl = factControl)
+# ppaFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 868706, trControl = factControl)
 
 ## use the importance output to select factors
 cols[["rf"]] <- c(1:6, 9:10, 15, 24:25, 30, 32, 38:43)

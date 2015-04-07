@@ -21,11 +21,12 @@ source("~/workspace/NHL_regression/R3/GPsetup.R")
 ## Minor penalties
 ## subset the data and build test models, then look at importance output
 # fitData <- nhlShape(2010, 2010, outcome = 19)
-# minorFactors.rf <- nhlAnalyze2(fitData, seed = 555634)
-# minorFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 623121)
-# minorFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 723044)
-# minorFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 503921)
-# minorFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 443584)
+# factControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
+# minorFactors.rf <- nhlAnalyze2(fitData, seed = 555634, importance = TRUE, trControl = factControl)
+# minorFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 623121, trControl = factControl)
+# minorFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 723044, trControl = factControl)
+# minorFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 503921, trControl = factControl)
+# minorFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 443584, trControl = factControl)
 
 ## use the importance output to select factors
 cols <- list()
@@ -159,11 +160,11 @@ output$minors <- rowMeans(preds2015[, 3:5]) * preds2015$games_played
 ## Major penalties
 ## subset the data and build test models, then look at importance output
 # fitData <- nhlShape(2010, 2010, outcome = 20)
-# majorFactors.rf <- nhlAnalyze2(fitData, seed = 249013)
-# majorFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 242772)
-# majorFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 74786)
-# majorFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 238164)
-# majorFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 196996)
+# majorFactors.rf <- nhlAnalyze2(fitData, seed = 249013, importance = TRUE, trControl = factControl)
+# majorFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 242772, trControl = factControl)
+# majorFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 74786, trControl = factControl)
+# majorFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 238164, trControl = factControl)
+# majorFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 196996, trControl = factControl)
 
 ## use the importance output to select factors
 cols[["rf"]] <- c(1:3, 8, 19:20, 25, 28, 38, 40:41, 47)
@@ -288,12 +289,12 @@ output$majors <- preds2015$cumulative * preds2015$games_played
 
 ## Misconduct penalties
 ## subset the data and build test models, then look at importance output
-fitData <- nhlShape(2010, 2010, outcome = 21)
-miscFactors.rf <- nhlAnalyze2(fitData, seed = 5997)
-miscFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 218471)
-miscFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 934130)
-miscFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 888571)
-miscFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 314769)
+# fitData <- nhlShape(2010, 2010, outcome = 21)
+# miscFactors.rf <- nhlAnalyze2(fitData, seed = 5997, importance = TRUE, trControl = factControl)
+# miscFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 218471, trControl = factControl)
+# miscFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 934130, trControl = factControl)
+# miscFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 888571, trControl = factControl)
+# miscFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 314769, trControl = factControl)
 
 ## use the importance output to select factors
 cols[["rf"]] <- c(1:2, 8, 19:21)
@@ -418,12 +419,12 @@ output$misconducts <- rowMeans(preds2015[, 3:5]) * preds2015$games_played
 
 ## Game Misconduct penalties
 ## subset the data and build test models, then look at importance output
-fitData <- nhlShape(2010, 2010, outcome = 22)
-gmiscFactors.rf <- nhlAnalyze2(fitData, seed = 866733)
-gmiscFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 392015)
-gmiscFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 469089)
-gmiscFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 370527)
-gmiscFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 779892)
+# fitData <- nhlShape(2010, 2010, outcome = 22)
+# gmiscFactors.rf <- nhlAnalyze2(fitData, seed = 866733, importance = TRUE, trControl = factControl)
+# gmiscFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 392015, trControl = factControl)
+# gmiscFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 469089, trControl = factControl)
+# gmiscFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 370527, trControl = factControl)
+# gmiscFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 779892, trControl = factControl)
 
 ## use the importance output to select factors
 cols[["rf"]] <- c(1:3, 4:6, 9:10, 15, 19:22, 24:25, 31, 33:34, 38, 40, 43, 45:46)
@@ -433,12 +434,12 @@ cols[["knn"]] <- c(1:2, 8, 20:21, 38, 41)
 cols[["svmLinear"]] <- c(1:2, 8, 20, 38, 41)
 
 ## build single models, ensemble the models, and look at correlations
-gmiscModel <- nhlModel(2010, 2010, outcome = 22, cols = cols, methods = c("rf", "gbm", "pls", "knn", "svmLinear"),
-                     controls = controls, seed = 578544)
-gmiscCorrs <- nhlCorr(2010, 2013, 22, gmiscModel)
-gmiscModel2 <- nhlModel(2010, 2010, outcome = 22, cols = cols, methods = c("rf", "gbm", "svmLinear"),
-                        controls = controls, seed = 798192)
-gmiscCorrs2 <- nhlCorr(2010, 2013, 22, gmiscModel2)
+# gmiscModel <- nhlModel(2010, 2010, outcome = 22, cols = cols, methods = c("rf", "gbm", "pls", "knn", "svmLinear"),
+#                      controls = controls, seed = 578544)
+# gmiscCorrs <- nhlCorr(2010, 2013, 22, gmiscModel)
+# gmiscModel2 <- nhlModel(2010, 2010, outcome = 22, cols = cols, methods = c("rf", "gbm", "svmLinear"),
+#                         controls = controls, seed = 798192)
+# gmiscCorrs2 <- nhlCorr(2010, 2013, 22, gmiscModel2)
 gmiscModel3 <- nhlModel(2013, 2013, outcome = 22, cols = cols, methods = c("rf", "gbm", "svmLinear"),
                        controls = controls, seed = 57589)
 gmiscCorrs3 <- nhlCorr(2010, 2013, 22, gmiscModel3)

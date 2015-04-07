@@ -20,12 +20,13 @@ source("~/workspace/NHL_regression/R3/GPsetup.R")
 
 ## Faceoff Wins
 ## subset the data and build test models, then look at importance output
-fitData <- nhlShape(2010, 2010, outcome = 33)
-fowFactors.rf <- nhlAnalyze2(fitData, seed = 717583)
-fowFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 213728)
-fowFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 312670)
-fowFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 494267)
-fowFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 960991)
+# fitData <- nhlShape(2010, 2010, outcome = 33)
+# factControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
+# fowFactors.rf <- nhlAnalyze2(fitData, seed = 717583, importance = TRUE, trControl = factControl)
+# fowFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 213728, trControl = factControl)
+# fowFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 312670, trControl = factControl)
+# fowFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 494267, trControl = factControl)
+# fowFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 960991, trControl = factControl)
 
 ## use the importance output to select factors
 cols <- list()
@@ -46,9 +47,9 @@ controls[[5]] <- fitControl
 fowModel <- nhlModel(2010, 2010, outcome = 33, cols = cols, methods = c("rf", "gbm", "pls", "knn", "svmLinear"),
                      controls = controls, seed = 449960)
 fowCorrs <- nhlCorr(2010, 2013, 33, fowModel)
-fowModel2 <- nhlModel(2010, 2010, outcome = 33, cols = cols, methods = c("rf", "gbm", "knn", "svmLinear"),
-                     controls = controls, seed = 575575)
-fowCorrs2 <- nhlCorr(2010, 2013, 33, fowModel2)
+# fowModel2 <- nhlModel(2010, 2010, outcome = 33, cols = cols, methods = c("rf", "gbm", "knn", "svmLinear"),
+#                      controls = controls, seed = 575575)
+# fowCorrs2 <- nhlCorr(2010, 2013, 33, fowModel2)
 
 ## prediction shaping
 preds2013 <- nhlPredict(2012, 2012, fowModel, outcome = 33)
@@ -181,12 +182,12 @@ output$faceoff_wins <- preds2015$cumulative * preds2015$games_played
 
 ## Faceoff Losses
 ## subset the data and build test models, then look at importance output
-fitData <- nhlShape(2010, 2010, outcome = 34)
-folFactors.rf <- nhlAnalyze2(fitData, seed = 540686)
-folFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 749022)
-folFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 377100)
-folFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 164778)
-folFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 921364)
+# fitData <- nhlShape(2010, 2010, outcome = 34)
+# folFactors.rf <- nhlAnalyze2(fitData, seed = 540686, importance = TRUE, trControl = factControl)
+# folFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 749022, trControl = factControl)
+# folFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 377100, trControl = factControl)
+# folFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 164778, trControl = factControl)
+# folFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 921364, trControl = factControl)
 
 ## use the importance output to select factors
 cols[["rf"]] <- c(1:2, 33:34, 39, 41, 45, 47)
