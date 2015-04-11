@@ -8,11 +8,12 @@ skaterstats$player_position <- as.factor(skaterstats$player_position)
 
 ## subset the data and build test models, then look at importance output
 # fitData <- nhlShape(2011, 2011, outcome = 3)
-# gpFactors.rf <- nhlAnalyze2(fitData, seed = 203622)
-# gpFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 654566)
-# gpFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 847244)
-# gpFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 174633)
-# gpFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 287174)
+# factControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
+# gpFactors.rf <- nhlAnalyze2(fitData, seed = 203622, importance = TRUE, trControl = factControl)
+# gpFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 654566, trControl = factControl)
+# gpFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 847244, trControl = factControl)
+# gpFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 174633, trControl = factControl)
+# gpFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 287174, trControl = factControl)
 
 ## use the importance output to select factors
 cols <- list()

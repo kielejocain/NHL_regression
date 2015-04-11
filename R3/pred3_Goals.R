@@ -21,11 +21,12 @@ source("~/workspace/NHL_regression/R3/GPsetup.R")
 
 ## subset the data and build test models, then look at importance output
 # fitData <- nhlShape(2010, 2010, outcome = 42)
-# esgFactors.rf <- nhlAnalyze2(fitData, seed = 966489)
-# esgFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 11052)
-# esgFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 133840)
-# esgFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 901012)
-# esgFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 236226)
+# factControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
+# esgFactors.rf <- nhlAnalyze2(fitData, seed = 966489, importance = TRUE, trControl = factControl)
+# esgFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 11052, trControl = factControl)
+# esgFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 133840, trControl = factControl)
+# esgFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 901012, trControl = factControl)
+# esgFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 236226, trControl = factControl)
 
 ## use the importance output to select factors
 cols <- list()
@@ -156,11 +157,11 @@ output$es_goals <- preds2015$cumulative * preds2015$games_played
 ## Short-handed Goals
 ## subset the data and build test models, then look at importance output
 # fitData <- nhlShape(2010, 2010, outcome = 11)
-# shgFactors.rf <- nhlAnalyze2(fitData, seed = 574248)
-# shgFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 162414)
-# shgFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 925306)
-# shgFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 703743)
-# shgFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 585725)
+# shgFactors.rf <- nhlAnalyze2(fitData, seed = 574248, importance = TRUE, trControl = factControl)
+# shgFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 162414, trControl = factControl)
+# shgFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 925306, trControl = factControl)
+# shgFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 703743, trControl = factControl)
+# shgFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 585725, trControl = factControl)
 
 ## use the importance output to select factors
 cols[["rf"]] <- c(1:6, 9:11, 13, 15, 24:27, 29, 31:34, 38:42, 45:47)
@@ -170,12 +171,12 @@ cols[["knn"]] <- c(1:2, 4, 6, 11, 13, 15:16, 27, 29:30, 32:34, 39, 42, 46)
 cols[["svmLinear"]] <- c(1:2, 4, 11, 13, 15, 29, 32:34, 42)
 
 ## build single models, ensemble the models, and look at correlations
-shgModel <- nhlModel(2010, 2010, outcome = 11, cols = cols, methods = c("rf", "gbm", "knn", "pls", "svmLinear"),
-                     controls = controls, seed = 113970)
-shgCorrs <- nhlCorr(2010, 2013, 11, shgModel)
-shgModel2 <- nhlModel(2013, 2013, outcome = 11, cols = cols, methods = c("rf", "gbm", "knn", "pls"),
-                     controls = controls, seed = 824216)
-shgCorrs2 <- nhlCorr(2010, 2013, 11, shgModel2)
+# shgModel <- nhlModel(2010, 2010, outcome = 11, cols = cols, methods = c("rf", "gbm", "knn", "pls", "svmLinear"),
+#                      controls = controls, seed = 113970)
+# shgCorrs <- nhlCorr(2010, 2013, 11, shgModel)
+# shgModel2 <- nhlModel(2013, 2013, outcome = 11, cols = cols, methods = c("rf", "gbm", "knn", "pls"),
+#                      controls = controls, seed = 824216)
+# shgCorrs2 <- nhlCorr(2010, 2013, 11, shgModel2)
 shgModel3 <- nhlModel(2013, 2013, outcome = 11, cols = cols, methods = c("rf", "gbm", "knn"),
                       controls = controls, seed = 447632)
 shgCorrs3 <- nhlCorr(2010, 2013, 11, shgModel3)
@@ -288,12 +289,12 @@ output <- merge(output, preds2015[, c(1, 9)])
 
 ## Power Play Goals
 ## subset the data and build test models, then look at importance output
-fitData <- nhlShape(2010, 2010, outcome = 9)
-ppgFactors.rf <- nhlAnalyze2(fitData, seed = 782497)
-ppgFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 203047)
-ppgFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 256806)
-ppgFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 785346)
-ppgFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 809034)
+# fitData <- nhlShape(2010, 2010, outcome = 9)
+# ppgFactors.rf <- nhlAnalyze2(fitData, seed = 782497, importance = TRUE, trControl = factControl)
+# ppgFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 203047, trControl = factControl)
+# ppgFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 256806, trControl = factControl)
+# ppgFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 785346, trControl = factControl)
+# ppgFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 809034, trControl = factControl)
 
 ## use the importance output to select factors
 cols[["rf"]] <- c(1:2, 4:6, 9:10, 15:16, 24:25, 29:30, 32, 38:43, 45:47)
@@ -303,12 +304,12 @@ cols[["knn"]] <- c(1:2, 4:6, 9:10, 15, 24:25, 30, 40, 42:43, 46)
 cols[["svmLinear"]] <- c(1:2, 4:6, 9:10, 13, 15, 24:25, 30, 40, 42:43, 45:46)
 
 ## build single models, ensemble the models, and look at correlations
-ppgModel <- nhlModel(2010, 2010, outcome = 9, cols = cols, methods = c("rf", "gbm", "pls", "knn", "svmLinear"),
-                      controls = controls, seed = 101142)
-ppgCorrs <- nhlCorr(2010, 2013, 9, ppgModel)
-ppgModel2 <- nhlModel(2013, 2013, outcome = 9, cols = cols, methods = c("rf", "gbm", "pls", "svmLinear"),
-                     controls = controls, seed = 429596)
-ppgCorrs2 <- nhlCorr(2010, 2013, 9, ppgModel2)
+# ppgModel <- nhlModel(2010, 2010, outcome = 9, cols = cols, methods = c("rf", "gbm", "pls", "knn", "svmLinear"),
+#                       controls = controls, seed = 101142)
+# ppgCorrs <- nhlCorr(2010, 2013, 9, ppgModel)
+# ppgModel2 <- nhlModel(2013, 2013, outcome = 9, cols = cols, methods = c("rf", "gbm", "pls", "svmLinear"),
+#                      controls = controls, seed = 429596)
+# ppgCorrs2 <- nhlCorr(2010, 2013, 9, ppgModel2)
 ppgModel3 <- nhlModel(2013, 2013, outcome = 9, cols = cols, methods = c("rf", "gbm", "svmLinear"),
                       controls = controls, seed = 206107)
 ppgCorrs3 <- nhlCorr(2010, 2013, 9, ppgModel3)

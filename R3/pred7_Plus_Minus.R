@@ -20,12 +20,13 @@ source("~/workspace/NHL_regression/R3/GPsetup.R")
 
 ## Team Goals For
 ## subset the data and build test models, then look at importance output
-fitData <- nhlShape(2010, 2010, outcome = 24)
-tgfFactors.rf <- nhlAnalyze2(fitData, seed = 608626)
-tgfFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 874259)
-tgfFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 37496)
-tgfFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 282028)
-tgfFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 471085)
+# fitData <- nhlShape(2010, 2010, outcome = 24)
+# factControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
+# tgfFactors.rf <- nhlAnalyze2(fitData, seed = 608626, importance = TRUE, trControl = factControl)
+# tgfFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 874259, trControl = factControl)
+# tgfFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 37496, trControl = factControl)
+# tgfFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 282028, trControl = factControl)
+# tgfFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 471085, trControl = factControl)
 
 ## use the importance output to select factors
 cols <- list()
@@ -43,12 +44,12 @@ controls[[2]] <- fitControl
 controls[[3]] <- fitControl
 controls[[4]] <- fitControl
 controls[[5]] <- fitControl
-tgfModel <- nhlModel(2010, 2010, outcome = 24, cols = cols, methods = c("rf", "gbm", "pls", "knn", "svmLinear"),
-                     controls = controls, seed = 928021)
-tgfCorrs <- nhlCorr(2010, 2013, 24, tgfModel)
-tgfModel2 <- nhlModel(2010, 2010, outcome = 24, cols = cols, methods = c("rf", "gbm", "pls", "svmLinear"),
-                     controls = controls, seed = 226886)
-tgfCorrs2 <- nhlCorr(2010, 2013, 24, tgfModel2)
+# tgfModel <- nhlModel(2010, 2010, outcome = 24, cols = cols, methods = c("rf", "gbm", "pls", "knn", "svmLinear"),
+#                      controls = controls, seed = 928021)
+# tgfCorrs <- nhlCorr(2010, 2013, 24, tgfModel)
+# tgfModel2 <- nhlModel(2010, 2010, outcome = 24, cols = cols, methods = c("rf", "gbm", "pls", "svmLinear"),
+#                      controls = controls, seed = 226886)
+# tgfCorrs2 <- nhlCorr(2010, 2013, 24, tgfModel2)
 tgfModel3 <- nhlModel(2013, 2013, outcome = 24, cols = cols, methods = c("rf", "gbm", "pls", "svmLinear"),
                       controls = controls, seed = 758243)
 tgfCorrs3 <- nhlCorr(2010, 2013, 24, tgfModel3)
@@ -170,12 +171,12 @@ output$team_goals_for <- preds2015$cumulative * preds2015$games_played
 
 ## Team PP Goals For
 ## subset the data and build test models, then look at importance output
-fitData <- nhlShape(2010, 2010, outcome = 25)
-tpgfFactors.rf <- nhlAnalyze2(fitData, seed = 103235)
-tpgfFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 442982)
-tpgfFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 602398)
-tpgfFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 930714)
-tpgfFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 632229)
+# fitData <- nhlShape(2010, 2010, outcome = 25)
+# tpgfFactors.rf <- nhlAnalyze2(fitData, seed = 103235, importance = TRUE, trControl = factControl)
+# tpgfFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 442982, trControl = factControl)
+# tpgfFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 602398, trControl = factControl)
+# tpgfFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 930714, trControl = factControl)
+# tpgfFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 632229, trControl = factControl)
 
 ## use the importance output to select factors
 cols[["rf"]] <- c(1:2, 6, 10, 24:25, 30, 40, 43, 46)
@@ -313,12 +314,12 @@ output$team_pp_goals_for <- rowMeans(preds2015[, 3:6]) * preds2015$games_played
 
 ## Team Goals Against
 ## subset the data and build test models, then look at importance output
-fitData <- nhlShape(2010, 2010, outcome = 26)
-tgaFactors.rf <- nhlAnalyze2(fitData, seed = 640345)
-tgaFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 225956)
-tgaFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 956974)
-tgaFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 318899)
-tgaFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 526169)
+# fitData <- nhlShape(2010, 2010, outcome = 26)
+# tgaFactors.rf <- nhlAnalyze2(fitData, seed = 640345, importance = TRUE, trControl = factControl)
+# tgaFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 225956, trControl = factControl)
+# tgaFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 956974, trControl = factControl)
+# tgaFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 318899, trControl = factControl)
+# tgaFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 526169, trControl = factControl)
 
 ## use the importance output to select factors
 cols[["rf"]] <- c(1:4, 6, 24:27, 29, 31, 33:34, 38:41, 43, 47)
@@ -463,12 +464,12 @@ output$team_goals_against <- preds2015$cumulative * preds2015$games_played
 
 ## Team PP Goals Against
 ## subset the data and build test models, then look at importance output
-fitData <- nhlShape(2010, 2010, outcome = 27)
-tpgaFactors.rf <- nhlAnalyze2(fitData, seed = 872633)
-tpgaFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 445138)
-tpgaFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 162775)
-tpgaFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 889032)
-tpgaFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 427993)
+# fitData <- nhlShape(2010, 2010, outcome = 27)
+# tpgaFactors.rf <- nhlAnalyze2(fitData, seed = 872633, importance = TRUE, trControl = factControl)
+# tpgaFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 445138, trControl = factControl)
+# tpgaFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 162775, trControl = factControl)
+# tpgaFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 889032, trControl = factControl)
+# tpgaFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 427993, trControl = factControl)
 
 ## use the importance output to select factors
 cols[["rf"]] <- c(1:4, 27, 29, 33, 38:39)

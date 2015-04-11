@@ -21,11 +21,12 @@ source("~/workspace/NHL_regression/R3/GPsetup.R")
 ## Shots
 ## subset the data and build test models, then look at importance output
 # fitData <- nhlShape(2010, 2010, outcome = 15)
-# shotFactors.rf <- nhlAnalyze2(fitData, seed = 564722)
-# shotFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 714647)
-# shotFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 137693)
-# shotFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 13280)
-# shotFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 540772)
+# factControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
+# shotFactors.rf <- nhlAnalyze2(fitData, seed = 564722, importance = TRUE, trControl = factControl)
+# shotFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 714647, trControl = factControl)
+# shotFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 137693, trControl = factControl)
+# shotFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 13280, trControl = factControl)
+# shotFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 540772, trControl = factControl)
 
 ## use the importance output to select factors
 cols <- list()

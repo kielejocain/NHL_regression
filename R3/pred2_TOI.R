@@ -17,11 +17,12 @@ dbDisconnect(conn)
 
 ## subset the data and build test models, then look at importance output
 # fitData <- nhlShape(2010, 2010, outcome = 38)
-# estFactors.rf <- nhlAnalyze2(fitData, seed = 480536)
-# estFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 779785)
-# estFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 769266)
-# estFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 726863)
-# estFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 943811)
+# factControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
+# estFactors.rf <- nhlAnalyze2(fitData, seed = 480536, importance = TRUE, trControl = factControl)
+# estFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 779785, trControl = factControl)
+# estFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 769266, trControl = factControl)
+# estFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 726863, trControl = factControl)
+# estFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 943811, trControl = factControl)
 
 ## use the importance output to select factors
 cols <- list()
@@ -167,11 +168,11 @@ output$es_toi <- preds2015$cumulative
 ## short-handed TOI
 ## subset the data and build test models, then look at importance output
 # fitData <- nhlShape(2010, 2010, outcome = 39)
-# shtFactors.rf <- nhlAnalyze2(fitData, seed = 480353)
-# shtFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 243781)
-# shtFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 795779)
-# shtFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 92018)
-# shtFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 313740)
+# shtFactors.rf <- nhlAnalyze2(fitData, seed = 480353, importance = TRUE, trControl = factControl)
+# shtFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 243781, trControl = factControl)
+# shtFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 795779, trControl = factControl)
+# shtFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 92018, trControl = factControl)
+# shtFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 313740, trControl = factControl)
 
 ## use the importance output to select factors
 cols[["rf"]] <- c(1:2, 27, 29, 33, 38:39)
@@ -181,12 +182,12 @@ cols[["knn"]] <- c(1:2, 25, 27, 29, 38:39, 41)
 cols[["svmLinear"]] <- c(1:2, 25, 27, 29, 38:39, 41)
 
 ## build single models, ensemble the models, and look at correlations
-shtModel <- nhlModel(2010, 2010, outcome = 39, cols = cols, methods = c("rf", "gbm", "pls", "knn", "svmLinear"),
-                     controls = controls, seed = 756846)
-shtCorrs <- nhlCorr(2010, 2013, 39, shtModel)
-shtModel2 <- nhlModel(2010, 2010, outcome = 39, cols = cols, methods = c("rf", "gbm", "pls", "svmLinear"),
-                     controls = controls, seed = 636404)
-shtCorrs2 <- nhlCorr(2010, 2013, 39, shtModel2)
+# shtModel <- nhlModel(2010, 2010, outcome = 39, cols = cols, methods = c("rf", "gbm", "pls", "knn", "svmLinear"),
+#                      controls = controls, seed = 756846)
+# shtCorrs <- nhlCorr(2010, 2013, 39, shtModel)
+# shtModel2 <- nhlModel(2010, 2010, outcome = 39, cols = cols, methods = c("rf", "gbm", "pls", "svmLinear"),
+#                      controls = controls, seed = 636404)
+# shtCorrs2 <- nhlCorr(2010, 2013, 39, shtModel2)
 shtModel3 <- nhlModel(2013, 2013, outcome = 39, cols = cols, methods = c("rf", "gbm", "pls", "svmLinear"),
                       controls = controls, seed = 423159)
 shtCorrs3 <- nhlCorr(2010, 2013, 39, shtModel3)
@@ -314,12 +315,12 @@ output$sh_toi <- preds2015$mean
 
 ## power play TOI
 ## subset the data and build test models, then look at importance output
-fitData <- nhlShape(2010, 2010, outcome = 40)
-pptFactors.rf <- nhlAnalyze2(fitData, seed = 19825)
-pptFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 55496)
-pptFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 629255)
-pptFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 549234)
-pptFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 174663)
+# fitData <- nhlShape(2010, 2010, outcome = 40)
+# pptFactors.rf <- nhlAnalyze2(fitData, seed = 19825, importance = TRUE, trControl = factControl)
+# pptFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 55496, trControl = factControl)
+# pptFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 629255, trControl = factControl)
+# pptFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 549234, trControl = factControl)
+# pptFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 174663, trControl = factControl)
 
 ## use the importance output to select factors
 cols[["rf"]] <- c(1:2, 6, 10, 24:25, 32, 40, 43, 46)
@@ -329,9 +330,9 @@ cols[["knn"]] <- c(1:2, 4:6, 9:10, 15, 24:25, 30, 40:41, 43, 45:46)
 cols[["svmLinear"]] <- c(1:2, 4:6, 9:10, 15, 24:25, 30, 40:41, 43, 45:46)
 
 ## build single models, ensemble the models, and look at correlations
-pptModel <- nhlModel(2013, 2013, outcome = 40, cols = cols, methods = c("rf", "gbm", "pls", "knn", "svmLinear"),
-                     controls = controls, seed = 424953)
-pptCorrs <- nhlCorr(2010, 2013, 40, pptModel)
+# pptModel <- nhlModel(2013, 2013, outcome = 40, cols = cols, methods = c("rf", "gbm", "pls", "knn", "svmLinear"),
+#                      controls = controls, seed = 424953)
+# pptCorrs <- nhlCorr(2010, 2013, 40, pptModel)
 pptModel2 <- nhlModel(2010, 2010, outcome = 40, cols = cols, methods = c("rf", "gbm", "pls", "svmLinear"),
                      controls = controls, seed = 546989)
 pptCorrs2 <- nhlCorr(2010, 2013, 40, pptModel2)
