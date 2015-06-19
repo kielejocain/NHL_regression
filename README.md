@@ -1,7 +1,8 @@
 NHL_regression
 ==============
 
-This repo is a collection of the various .Rmd and knitR-generated .pdf files that describe some basic regression analysis of the National Hockey League (NHL) data collected via the code found in my `NHL_sql` repo.  This analysis focuses mostly on skaters; goalie analysis will come later.
+
+This repo consists of various attempts to predict NHL fantasy statistics using machine learning techniques in R.  
 
 Philosophy
 ----------
@@ -11,9 +12,13 @@ Though several stats will be modeled purely against their historical data for a 
 File Structure
 --------------
 
-The `R/` folder contains code for importing the data from the PostgreSQL database as built in my `NHL_sql` repo.  We will include .Rmd, .md, and .pdf files in the `Predictions/` folder for each statistic modeled.
+The `R/` folder contains my first basic attempt using linear regression so that I could practice making .Rmd files, and can be safely ignored.
+
+The `R2/` folder is an aborted attempt to restart; again I leave it in for completeness, but can be ignored.
+
+The `R3/` folder contains the first full attempt at a model, the results of which are at [hockeyml.com](http://www.hockeyml.com). The `source.R` file contains all the custom functions used in the analyis files.  Each of the numbered files are analyses for statistics that should be run in order, as sometimes later analyses use results of previous ones. 
 
 Replication
 -----------
 
-If you'd like to run the analysis locally, first clone and run the code in `NHL_sql`, then weave the .Rmd files using knitR (RStudio has this built in).  You'll need to edit the `R/full_retrieve.R-TRMPLATE` file with your local data details and save without the `-TEMPLATE` "extension."
+If you'd like to run the analysis locally, first clone and run the code in `NHL_sql`, then run each of the numbered `.R` files in order (will take a while). 
