@@ -154,30 +154,17 @@ nhlAnalyze <- function(rfdata, gbmdata, gbm.cutoff = 4, rf.cutoff = 100, seed = 
       return(output)
 }
 
-nhlAnalyze2 <- function(data, method = "rf", cutoff = 0, seed = NA) {
+nhlAnalyze2 <- function(data, method = "rf", cutoff = 0, seed = NA, ...) {
+      # if asked, set the seed
       if (!is.na(seed)) {
             set.seed(seed)
       }
-      fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
-      if (method == "rf") {
-            model1 <- nhlBuild(data = data, method = method, perc = 0.7, importance = TRUE,
-                               trControl = fitControl)
-            model2 <- nhlBuild(data = data, method = method, perc = 0.7, importance = TRUE,
-                               trControl = fitControl)
-            model3 <- nhlBuild(data = data, method = method, perc = 0.7, importance = TRUE,
-                               trControl = fitControl)
-            model4 <- nhlBuild(data = data, method = method, perc = 0.7, importance = TRUE,
-                               trControl = fitControl)
-      } else {
-            model1 <- nhlBuild(data = data, method = method, perc = 0.7,
-                               trControl = fitControl)
-            model2 <- nhlBuild(data = data, method = method, perc = 0.7,
-                               trControl = fitControl)
-            model3 <- nhlBuild(data = data, method = method, perc = 0.7,
-                               trControl = fitControl)
-            model4 <- nhlBuild(data = data, method = method, perc = 0.7,
-                               trControl = fitControl)     
-      }
+      # build the models
+      model1 <- nhlBuild(data = data, method = method, perc = 0.7, ...)
+      model2 <- nhlBuild(data = data, method = method, perc = 0.7, ...)
+      model3 <- nhlBuild(data = data, method = method, perc = 0.7, ...)
+      model4 <- nhlBuild(data = data, method = method, perc = 0.7, ...)
+      # retrieve importance data
       sum1 <- data.frame(var = row.names(varImp(model1)[['importance']]),
                          imp = varImp(model1)[['importance']]$Overall)
       sum2 <- data.frame(var = row.names(varImp(model2)[['importance']]),
@@ -186,11 +173,14 @@ nhlAnalyze2 <- function(data, method = "rf", cutoff = 0, seed = NA) {
                          imp = varImp(model3)[['importance']]$Overall)
       sum4 <- data.frame(var = row.names(varImp(model4)[['importance']]),
                          imp = varImp(model4)[['importance']]$Overall)
+      # collate and sum iportance data
       sum <- merge(sum1, sum2, by = 1, suffixes = c(".1", ".2"))
       summ <- merge(sum3, sum4, by = 1, suffixes = c(".3", ".4"))
       sum <- merge(sum, summ)
       sum$tot <- rowSums(sum[, 2:5])
+      # order by total importance
       sum <- sum[order(sum$tot, decreasing = TRUE),]
+      # strip out unimportant factors and individual model data
       sum <- sum[sum$tot > cutoff, c(1, 6)]
       row.names(sum) <- NULL
       return(sum)
