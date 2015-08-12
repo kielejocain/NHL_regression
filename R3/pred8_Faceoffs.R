@@ -82,42 +82,42 @@ preds2014$mean <- rowMeans(preds2014[,  5:9])
 ## graphing
 corr <- round(cor(preds2014$outcome, preds2014$naive), digits = 4)
 plot14naive <- ggplot(preds2014, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: Faceoff Wins, 2013 vs. 2014 (r = ", corr, ")", sep = "")) +
       xlab("Faceoff Wins in 2013 (Scaled)") + ylab("Faceoff Wins in 2014")
 corr <- round(cor(preds2014$outcome, preds2014$rf), digits = 4)
 plot14rf <- ggplot(preds2014, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Faceoff Wins, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Wins") + ylab("Actual Faceoff Wins")
 corr <- round(cor(preds2014$outcome, preds2014$gbm), digits = 4)
 plot14gbm <- ggplot(preds2014, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Faceoff Wins, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Wins") + ylab("Actual Faceoff Wins")
 corr <- round(cor(preds2014$outcome, preds2014$pls), digits = 4)
 plot14pls <- ggplot(preds2014, aes(x=pls, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Faceoff Wins, Partial Least Squares Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Wins") + ylab("Actual Faceoff Wins")
 corr <- round(cor(preds2014$outcome, preds2014$knn), digits = 4)
 plot14knn <- ggplot(preds2014, aes(x=knn, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Faceoff Wins, k-Nearest Neighbors Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Wins") + ylab("Actual Faceoff Wins")
 corr <- round(cor(preds2014$outcome, preds2014$svmLinear), digits = 4)
 plot14svm <- ggplot(preds2014, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Faceoff Wins, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Wins") + ylab("Actual Faceoff Wins")
 corr <- round(cor(preds2014$outcome, preds2014$cumulative), digits = 4)
 plot14cum <- ggplot(preds2014, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Faceoff Wins, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Wins") + ylab("Actual Faceoff Wins")
 corr <- round(cor(preds2014$outcome, preds2014$mean), digits = 4)
 plot14mean <- ggplot(preds2014, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Faceoff Wins, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Wins") + ylab("Actual Faceoff Wins")
 png(width = 960, height = 1220, 
@@ -126,42 +126,42 @@ grid.arrange(plot14naive, plot14rf, plot14gbm, plot14pls, plot14knn, plot14svm, 
 dev.off()
 corr <- round(cor(preds2013$outcome, preds2013$naive), digits = 4)
 plot13naive <- ggplot(preds2013, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: Faceoff Wins, 2012 vs. 2013 (r = ", corr, ")", sep = "")) +
       xlab("Faceoff Wins in 2012 (Scaled)") + ylab("Faceoff Wins in 2013")
 corr <- round(cor(preds2013$outcome, preds2013$rf), digits = 4)
 plot13rf <- ggplot(preds2013, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Faceoff Wins, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Wins") + ylab("Actual Faceoff Wins")
 corr <- round(cor(preds2013$outcome, preds2013$gbm), digits = 4)
 plot13gbm <- ggplot(preds2013, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Faceoff Wins, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Wins") + ylab("Actual Faceoff Wins")
 corr <- round(cor(preds2013$outcome, preds2013$pls), digits = 4)
 plot13pls <- ggplot(preds2013, aes(x=pls, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Faceoff Wins, Partial Least Squares Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Wins") + ylab("Actual Faceoff Wins")
 corr <- round(cor(preds2013$outcome, preds2013$knn), digits = 4)
 plot13knn <- ggplot(preds2013, aes(x=knn, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Faceoff Wins, k-Nearest Neighbors Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Wins") + ylab("Actual Faceoff Wins")
 corr <- round(cor(preds2013$outcome, preds2013$svmLinear), digits = 4)
 plot13svm <- ggplot(preds2013, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Faceoff Wins, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Wins") + ylab("Actual Faceoff Wins")
 corr <- round(cor(preds2013$outcome, preds2013$cumulative), digits = 4)
 plot13cum <- ggplot(preds2013, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Faceoff Wins, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Wins") + ylab("Actual Faceoff Wins")
 corr <- round(cor(preds2013$outcome, preds2013$mean), digits = 4)
 plot13mean <- ggplot(preds2013, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Faceoff Wins, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Wins") + ylab("Actual Faceoff Wins")
 png(width = 960, height = 1220, 
@@ -239,42 +239,42 @@ preds2014$mean <- rowMeans(preds2014[,  5:9])
 ## graphing
 corr <- round(cor(preds2014$outcome, preds2014$naive), digits = 4)
 plot14naive <- ggplot(preds2014, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: Faceoff Losses, 2013 vs. 2014 (r = ", corr, ")", sep = "")) +
       xlab("Faceoff Losses in 2013 (Scaled)") + ylab("Faceoff Losses in 2014")
 corr <- round(cor(preds2014$outcome, preds2014$rf), digits = 4)
 plot14rf <- ggplot(preds2014, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Faceoff Losses, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Losses") + ylab("Actual Faceoff Losses")
 corr <- round(cor(preds2014$outcome, preds2014$gbm), digits = 4)
 plot14gbm <- ggplot(preds2014, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Faceoff Losses, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Losses") + ylab("Actual Faceoff Losses")
 corr <- round(cor(preds2014$outcome, preds2014$pls), digits = 4)
 plot14pls <- ggplot(preds2014, aes(x=pls, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Faceoff Losses, Partial Least Squares Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Losses") + ylab("Actual Faceoff Losses")
 corr <- round(cor(preds2014$outcome, preds2014$knn), digits = 4)
 plot14knn <- ggplot(preds2014, aes(x=knn, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Faceoff Losses, k-Nearest Neighbors Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Losses") + ylab("Actual Faceoff Losses")
 corr <- round(cor(preds2014$outcome, preds2014$svmLinear), digits = 4)
 plot14svm <- ggplot(preds2014, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Faceoff Losses, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Losses") + ylab("Actual Faceoff Losses")
 corr <- round(cor(preds2014$outcome, preds2014$cumulative), digits = 4)
 plot14cum <- ggplot(preds2014, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Faceoff Losses, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Losses") + ylab("Actual Faceoff Losses")
 corr <- round(cor(preds2014$outcome, preds2014$mean), digits = 4)
 plot14mean <- ggplot(preds2014, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Faceoff Losses, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Losses") + ylab("Actual Faceoff Losses")
 png(width = 960, height = 1220, 
@@ -283,42 +283,42 @@ grid.arrange(plot14naive, plot14rf, plot14gbm, plot14pls, plot14knn, plot14svm, 
 dev.off()
 corr <- round(cor(preds2013$outcome, preds2013$naive), digits = 4)
 plot13naive <- ggplot(preds2013, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: Faceoff Losses, 2012 vs. 2013 (r = ", corr, ")", sep = "")) +
       xlab("Faceoff Losses in 2012 (Scaled)") + ylab("Faceoff Losses in 2013")
 corr <- round(cor(preds2013$outcome, preds2013$rf), digits = 4)
 plot13rf <- ggplot(preds2013, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Faceoff Losses, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Losses") + ylab("Actual Faceoff Losses")
 corr <- round(cor(preds2013$outcome, preds2013$gbm), digits = 4)
 plot13gbm <- ggplot(preds2013, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Faceoff Losses, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Losses") + ylab("Actual Faceoff Losses")
 corr <- round(cor(preds2013$outcome, preds2013$pls), digits = 4)
 plot13pls <- ggplot(preds2013, aes(x=pls, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Faceoff Losses, Partial Least Squares Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Losses") + ylab("Actual Faceoff Losses")
 corr <- round(cor(preds2013$outcome, preds2013$knn), digits = 4)
 plot13knn <- ggplot(preds2013, aes(x=knn, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Faceoff Losses, k-Nearest Neighbors Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Losses") + ylab("Actual Faceoff Losses")
 corr <- round(cor(preds2013$outcome, preds2013$svmLinear), digits = 4)
 plot13svm <- ggplot(preds2013, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Faceoff Losses, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Losses") + ylab("Actual Faceoff Losses")
 corr <- round(cor(preds2013$outcome, preds2013$cumulative), digits = 4)
 plot13cum <- ggplot(preds2013, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Faceoff Losses, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Losses") + ylab("Actual Faceoff Losses")
 corr <- round(cor(preds2013$outcome, preds2013$mean), digits = 4)
 plot13mean <- ggplot(preds2013, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Faceoff Losses, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Faceoff Losses") + ylab("Actual Faceoff Losses")
 png(width = 960, height = 1220, 

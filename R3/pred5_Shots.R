@@ -78,32 +78,32 @@ preds2014$mean <- rowMeans(preds2014[,  5:7])
 ## graphing
 corr <- round(cor(preds2014$outcome, preds2014$naive), digits = 4)
 plot14naive <- ggplot(preds2014, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: Shots, 2013 vs. 2014 (r = ", corr, ")", sep = "")) +
       xlab("Shots in 2013 (Scaled)") + ylab("Shots in 2014")
 corr <- round(cor(preds2014$outcome, preds2014$rf), digits = 4)
 plot14rf <- ggplot(preds2014, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Shots, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Shots") + ylab("Actual Shots")
 corr <- round(cor(preds2014$outcome, preds2014$gbm), digits = 4)
 plot14gbm <- ggplot(preds2014, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Shots, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Shots") + ylab("Actual Shots")
 corr <- round(cor(preds2014$outcome, preds2014$svmLinear), digits = 4)
 plot14svm <- ggplot(preds2014, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Shots, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Shots") + ylab("Actual Shots")
 corr <- round(cor(preds2014$outcome, preds2014$cumulative), digits = 4)
 plot14cum <- ggplot(preds2014, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Shots, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Shots") + ylab("Actual Shots")
 corr <- round(cor(preds2014$outcome, preds2014$mean), digits = 4)
 plot14mean <- ggplot(preds2014, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Shots, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Shots") + ylab("Actual Shots")
 png(width = 960, height = 960, 
@@ -112,32 +112,32 @@ grid.arrange(plot14naive, plot14rf, plot14gbm, plot14svm, plot14cum, plot14mean,
 dev.off()
 corr <- round(cor(preds2013$outcome, preds2013$naive), digits = 4)
 plot13naive <- ggplot(preds2013, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: Shots, 2012 vs. 2013 (r = ", corr, ")", sep = "")) +
       xlab("Shots in 2012 (Scaled)") + ylab("Shots in 2013")
 corr <- round(cor(preds2013$outcome, preds2013$rf), digits = 4)
 plot13rf <- ggplot(preds2013, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Shots, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Shots") + ylab("Actual Shots")
 corr <- round(cor(preds2013$outcome, preds2013$gbm), digits = 4)
 plot13gbm <- ggplot(preds2013, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Shots, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Shots") + ylab("Actual Shots")
 corr <- round(cor(preds2013$outcome, preds2013$svmLinear), digits = 4)
 plot13svm <- ggplot(preds2013, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Shots, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Shots") + ylab("Actual Shots")
 corr <- round(cor(preds2013$outcome, preds2013$cumulative), digits = 4)
 plot13cum <- ggplot(preds2013, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Shots, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Shots") + ylab("Actual Shots")
 corr <- round(cor(preds2013$outcome, preds2013$mean), digits = 4)
 plot13mean <- ggplot(preds2013, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Shots, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Shots") + ylab("Actual Shots")
 png(width = 960, height = 960, 

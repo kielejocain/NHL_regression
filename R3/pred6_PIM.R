@@ -81,32 +81,32 @@ preds2014$mean <- rowMeans(preds2014[,  5:7])
 ## graphing
 corr <- round(cor(preds2014$outcome, preds2014$naive), digits = 4)
 plot14naive <- ggplot(preds2014, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: Minors, 2013 vs. 2014 (r = ", corr, ")", sep = "")) +
       xlab("Minors in 2013 (Scaled)") + ylab("Minors in 2014")
 corr <- round(cor(preds2014$outcome, preds2014$rf), digits = 4)
 plot14rf <- ggplot(preds2014, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Minors, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Minors") + ylab("Actual Minors")
 corr <- round(cor(preds2014$outcome, preds2014$gbm), digits = 4)
 plot14gbm <- ggplot(preds2014, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Minors, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Minors") + ylab("Actual Minors")
 corr <- round(cor(preds2014$outcome, preds2014$svmLinear), digits = 4)
 plot14svm <- ggplot(preds2014, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Minors, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Minors") + ylab("Actual Minors")
 corr <- round(cor(preds2014$outcome, preds2014$cumulative), digits = 4)
 plot14cum <- ggplot(preds2014, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Minors, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Minors") + ylab("Actual Minors")
 corr <- round(cor(preds2014$outcome, preds2014$mean), digits = 4)
 plot14mean <- ggplot(preds2014, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Minors, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Minors") + ylab("Actual Minors")
 png(width = 960, height = 960, 
@@ -115,32 +115,32 @@ grid.arrange(plot14naive, plot14rf, plot14gbm, plot14svm, plot14cum, plot14mean,
 dev.off()
 corr <- round(cor(preds2013$outcome, preds2013$naive), digits = 4)
 plot13naive <- ggplot(preds2013, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: Minors, 2012 vs. 2013 (r = ", corr, ")", sep = "")) +
       xlab("Minors in 2012 (Scaled)") + ylab("Minors in 2013")
 corr <- round(cor(preds2013$outcome, preds2013$rf), digits = 4)
 plot13rf <- ggplot(preds2013, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Minors, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Minors") + ylab("Actual Minors")
 corr <- round(cor(preds2013$outcome, preds2013$gbm), digits = 4)
 plot13gbm <- ggplot(preds2013, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Minors, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Minors") + ylab("Actual Minors")
 corr <- round(cor(preds2013$outcome, preds2013$svmLinear), digits = 4)
 plot13svm <- ggplot(preds2013, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Minors, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Minors") + ylab("Actual Minors")
 corr <- round(cor(preds2013$outcome, preds2013$cumulative), digits = 4)
 plot13cum <- ggplot(preds2013, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Minors, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Minors") + ylab("Actual Minors")
 corr <- round(cor(preds2013$outcome, preds2013$mean), digits = 4)
 plot13mean <- ggplot(preds2013, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Minors, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Minors") + ylab("Actual Minors")
 png(width = 960, height = 960, 
@@ -211,32 +211,32 @@ preds2014$mean <- rowMeans(preds2014[,  5:7])
 ## graphing
 corr <- round(cor(preds2014$outcome, preds2014$naive), digits = 4)
 plot14naive <- ggplot(preds2014, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: Majors, 2013 vs. 2014 (r = ", corr, ")", sep = "")) +
       xlab("Majors in 2013 (Scaled)") + ylab("Majors in 2014")
 corr <- round(cor(preds2014$outcome, preds2014$rf), digits = 4)
 plot14rf <- ggplot(preds2014, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Majors, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Majors") + ylab("Actual Majors")
 corr <- round(cor(preds2014$outcome, preds2014$gbm), digits = 4)
 plot14gbm <- ggplot(preds2014, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Majors, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Majors") + ylab("Actual Majors")
 corr <- round(cor(preds2014$outcome, preds2014$svmLinear), digits = 4)
 plot14svm <- ggplot(preds2014, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Majors, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Majors") + ylab("Actual Majors")
 corr <- round(cor(preds2014$outcome, preds2014$cumulative), digits = 4)
 plot14cum <- ggplot(preds2014, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Majors, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Majors") + ylab("Actual Majors")
 corr <- round(cor(preds2014$outcome, preds2014$mean), digits = 4)
 plot14mean <- ggplot(preds2014, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Majors, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Majors") + ylab("Actual Majors")
 png(width = 960, height = 960, 
@@ -250,27 +250,27 @@ plot13naive <- ggplot(preds2013, aes(x=naive, y=outcome)) +
       xlab("Majors in 2012 (Scaled)") + ylab("Majors in 2013")
 corr <- round(cor(preds2013$outcome, preds2013$rf), digits = 4)
 plot13rf <- ggplot(preds2013, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Majors, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Majors") + ylab("Actual Majors")
 corr <- round(cor(preds2013$outcome, preds2013$gbm), digits = 4)
 plot13gbm <- ggplot(preds2013, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Majors, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Majors") + ylab("Actual Majors")
 corr <- round(cor(preds2013$outcome, preds2013$svmLinear), digits = 4)
 plot13svm <- ggplot(preds2013, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Majors, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Majors") + ylab("Actual Majors")
 corr <- round(cor(preds2013$outcome, preds2013$cumulative), digits = 4)
 plot13cum <- ggplot(preds2013, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Majors, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Majors") + ylab("Actual Majors")
 corr <- round(cor(preds2013$outcome, preds2013$mean), digits = 4)
 plot13mean <- ggplot(preds2013, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Majors, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Majors") + ylab("Actual Majors")
 png(width = 960, height = 960, 
@@ -341,32 +341,32 @@ preds2014$mean <- rowMeans(preds2014[,  5:7])
 ## graphing
 corr <- round(cor(preds2014$outcome, preds2014$naive), digits = 4)
 plot14naive <- ggplot(preds2014, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: Misconducts, 2013 vs. 2014 (r = ", corr, ")", sep = "")) +
       xlab("Misconducts in 2013 (Scaled)") + ylab("Misconducts in 2014")
 corr <- round(cor(preds2014$outcome, preds2014$rf), digits = 4)
 plot14rf <- ggplot(preds2014, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Misconducts, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Misconducts") + ylab("Actual Misconducts")
 corr <- round(cor(preds2014$outcome, preds2014$gbm), digits = 4)
 plot14gbm <- ggplot(preds2014, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Misconducts, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Misconducts") + ylab("Actual Misconducts")
 corr <- round(cor(preds2014$outcome, preds2014$svmLinear), digits = 4)
 plot14svm <- ggplot(preds2014, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Misconducts, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Misconducts") + ylab("Actual Misconducts")
 corr <- round(cor(preds2014$outcome, preds2014$cumulative), digits = 4)
 plot14cum <- ggplot(preds2014, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Misconducts, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Misconducts") + ylab("Actual Misconducts")
 corr <- round(cor(preds2014$outcome, preds2014$mean), digits = 4)
 plot14mean <- ggplot(preds2014, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Misconducts, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Misconducts") + ylab("Actual Misconducts")
 png(width = 960, height = 960, 
@@ -375,32 +375,32 @@ grid.arrange(plot14naive, plot14rf, plot14gbm, plot14svm, plot14cum, plot14mean,
 dev.off()
 corr <- round(cor(preds2013$outcome, preds2013$naive), digits = 4)
 plot13naive <- ggplot(preds2013, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: Misconducts, 2012 vs. 2013 (r = ", corr, ")", sep = "")) +
       xlab("Misconducts in 2012 (Scaled)") + ylab("Misconducts in 2013")
 corr <- round(cor(preds2013$outcome, preds2013$rf), digits = 4)
 plot13rf <- ggplot(preds2013, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Misconducts, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Misconducts") + ylab("Actual Misconducts")
 corr <- round(cor(preds2013$outcome, preds2013$gbm), digits = 4)
 plot13gbm <- ggplot(preds2013, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Misconducts, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Misconducts") + ylab("Actual Misconducts")
 corr <- round(cor(preds2013$outcome, preds2013$svmLinear), digits = 4)
 plot13svm <- ggplot(preds2013, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Misconducts, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Misconducts") + ylab("Actual Misconducts")
 corr <- round(cor(preds2013$outcome, preds2013$cumulative), digits = 4)
 plot13cum <- ggplot(preds2013, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Misconducts, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Misconducts") + ylab("Actual Misconducts")
 corr <- round(cor(preds2013$outcome, preds2013$mean), digits = 4)
 plot13mean <- ggplot(preds2013, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Misconducts, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Misconducts") + ylab("Actual Misconducts")
 png(width = 960, height = 960, 
@@ -471,32 +471,32 @@ preds2014$mean <- rowMeans(preds2014[,  5:7])
 ## graphing
 corr <- round(cor(preds2014$outcome, preds2014$naive), digits = 4)
 plot14naive <- ggplot(preds2014, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: Misconducts, 2013 vs. 2014 (r = ", corr, ")", sep = "")) +
       xlab("Misconducts in 2013 (Scaled)") + ylab("Game Misconducts in 2014")
 corr <- round(cor(preds2014$outcome, preds2014$rf), digits = 4)
 plot14rf <- ggplot(preds2014, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Game Misconducts, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Game Misconducts") + ylab("Actual Game Misconducts")
 corr <- round(cor(preds2014$outcome, preds2014$gbm), digits = 4)
 plot14gbm <- ggplot(preds2014, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Game Misconducts, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Game Misconducts") + ylab("Actual Game Misconducts")
 corr <- round(cor(preds2014$outcome, preds2014$svmLinear), digits = 4)
 plot14svm <- ggplot(preds2014, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Game Misconducts, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Game Misconducts") + ylab("Actual Game Misconducts")
 corr <- round(cor(preds2014$outcome, preds2014$cumulative), digits = 4)
 plot14cum <- ggplot(preds2014, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Game Misconducts, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Game Misconducts") + ylab("Actual Game Misconducts")
 corr <- round(cor(preds2014$outcome, preds2014$mean), digits = 4)
 plot14mean <- ggplot(preds2014, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Game Misconducts, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Game Misconducts") + ylab("Actual Game Misconducts")
 png(width = 960, height = 960, 
@@ -505,32 +505,32 @@ grid.arrange(plot14naive, plot14rf, plot14gbm, plot14svm, plot14cum, plot14mean,
 dev.off()
 corr <- round(cor(preds2013$outcome, preds2013$naive), digits = 4)
 plot13naive <- ggplot(preds2013, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: Game Misconducts, 2012 vs. 2013 (r = ", corr, ")", sep = "")) +
       xlab("Game Misconducts in 2012 (Scaled)") + ylab("Game Misconducts in 2013")
 corr <- round(cor(preds2013$outcome, preds2013$rf), digits = 4)
 plot13rf <- ggplot(preds2013, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Game Misconducts, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Game Misconducts") + ylab("Actual Game Misconducts")
 corr <- round(cor(preds2013$outcome, preds2013$gbm), digits = 4)
 plot13gbm <- ggplot(preds2013, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Game Misconducts, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Game Misconducts") + ylab("Actual Game Misconducts")
 corr <- round(cor(preds2013$outcome, preds2013$svmLinear), digits = 4)
 plot13svm <- ggplot(preds2013, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Game Misconducts, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Game Misconducts") + ylab("Actual Game Misconducts")
 corr <- round(cor(preds2013$outcome, preds2013$cumulative), digits = 4)
 plot13cum <- ggplot(preds2013, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Game Misconducts, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Game Misconducts") + ylab("Actual Game Misconducts")
 corr <- round(cor(preds2013$outcome, preds2013$mean), digits = 4)
 plot13mean <- ggplot(preds2013, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Game Misconducts, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Game Misconducts") + ylab("Actual Game Misconducts")
 png(width = 960, height = 960, 

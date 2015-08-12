@@ -63,32 +63,32 @@ preds2014$mean <- (preds2014$rf + preds2014$gbm + preds2014$svmLinear) / 3
 ## graphing
 corr <- round(gpCorrs4["2014", "naive"], digits = 4)
 plot14naive <- ggplot(preds2014, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: Games Played, 2013 vs. 2014 (r = ", corr, ")", sep = "")) +
       xlab("Games Played in 2013 (Scaled)") + ylab("Games Played in 2014")
 corr <- round(gpCorrs4["2014", "rf"], digits = 4)
 plot14rf <- ggplot(preds2014, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Games Played, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Games Played") + ylab("Actual Games Played")
 corr <- round(gpCorrs4["2014", "gbm"], digits = 4)
 plot14gbm <- ggplot(preds2014, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Games Played, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Games Played") + ylab("Actual Games Played")
 corr <- round(gpCorrs4["2014", "svmLinear"], digits = 4)
 plot14svm <- ggplot(preds2014, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Games Played, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Games Played") + ylab("Actual Games Played")
 corr <- round(gpCorrs4["2014", "cumulative"], digits = 4)
 plot14cum <- ggplot(preds2014, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Games Played, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Games Played") + ylab("Actual Games Played")
 corr <- round(gpCorrs4["2014", "mean"], digits = 4)
 plot14mean <- ggplot(preds2014, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 Games Played, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Games Played") + ylab("Actual Games Played")
 png(filename = "~/workspace/NHL_regression/graphics/GP/GP20141_naive.png")
@@ -115,32 +115,32 @@ grid.arrange(plot14naive, plot14rf, plot14gbm, plot14svm, plot14cum, plot14mean,
 dev.off()
 corr <- round(gpCorrs4["2013", "naive"], digits = 4)
 plot13naive <- ggplot(preds2013, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: Games Played, 2012 vs. 2013 (r = ", corr, ")", sep = "")) +
       xlab("Games Played in 2012 (Scaled)") + ylab("Games Played in 2013")
 corr <- round(gpCorrs4["2013", "rf"], digits = 4)
 plot13rf <- ggplot(preds2013, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Games Played, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Games Played") + ylab("Actual Games Played")
 corr <- round(gpCorrs4["2013", "gbm"], digits = 4)
 plot13gbm <- ggplot(preds2013, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Games Played, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Games Played") + ylab("Actual Games Played")
 corr <- round(gpCorrs4["2013", "svmLinear"], digits = 4)
 plot13svm <- ggplot(preds2013, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Games Played, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted Games Played") + ylab("Actual Games Played")
 corr <- round(gpCorrs4["2013", "cumulative"], digits = 4)
 plot13cum <- ggplot(preds2013, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Games Played, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Games Played") + ylab("Actual Games Played")
 corr <- round(gpCorrs4["2013", "mean"], digits = 4)
 plot13mean <- ggplot(preds2013, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 Games Played, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted Games Played") + ylab("Actual Games Played")
 png(filename = "~/workspace/NHL_regression/graphics/GP/GP20131_naive.png")

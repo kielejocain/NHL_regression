@@ -81,32 +81,32 @@ preds2014$mean <- (preds2014$rf + preds2014$gbm + preds2014$svmLinear) / 3
 ## graphing
 corr <- round(cor(preds2014$outcome, preds2014$naive), digits = 4)
 plot14naive <- ggplot(preds2014, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: ES Goals, 2013 vs. 2014 (r = ", corr, ")", sep = "")) +
       xlab("ES Goals in 2013 (Scaled)") + ylab("ES Goals in 2014")
 corr <- round(cor(preds2014$outcome, preds2014$rf), digits = 4)
 plot14rf <- ggplot(preds2014, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 ES Goals, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted ES Goals") + ylab("Actual ES Goals")
 corr <- round(cor(preds2014$outcome, preds2014$gbm), digits = 4)
 plot14gbm <- ggplot(preds2014, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 ES Goals, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted ES Goals") + ylab("Actual ES Goals")
 corr <- round(cor(preds2014$outcome, preds2014$svmLinear), digits = 4)
 plot14svm <- ggplot(preds2014, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 ES Goals, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted ES Goals") + ylab("Actual ES Goals")
 corr <- round(cor(preds2014$outcome, preds2014$cumulative), digits = 4)
 plot14cum <- ggplot(preds2014, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 ES Goals, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted ES Goals") + ylab("Actual ES Goals")
 corr <- round(cor(preds2014$outcome, preds2014$mean), digits = 4)
 plot14mean <- ggplot(preds2014, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 ES Goals, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted ES Goals") + ylab("Actual ES Goals")
 png(width = 960, height = 960, 
@@ -115,32 +115,32 @@ grid.arrange(plot14naive, plot14rf, plot14gbm, plot14svm, plot14cum, plot14mean,
 dev.off()
 corr <- round(cor(preds2013$outcome, preds2013$naive), digits = 4)
 plot13naive <- ggplot(preds2013, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: ES Goals, 2012 vs. 2013 (r = ", corr, ")", sep = "")) +
       xlab("ES Goals in 2012 (Scaled)") + ylab("ES Goals in 2013")
 corr <- round(cor(preds2013$outcome, preds2013$rf), digits = 4)
 plot13rf <- ggplot(preds2013, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 ES Goals, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted ES Goals") + ylab("Actual ES Goals")
 corr <- round(cor(preds2013$outcome, preds2013$gbm), digits = 4)
 plot13gbm <- ggplot(preds2013, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 ES Goals, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted ES Goals") + ylab("Actual ES Goals")
 corr <- round(cor(preds2013$outcome, preds2013$svmLinear), digits = 4)
 plot13svm <- ggplot(preds2013, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 ES Goals, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted ES Goals") + ylab("Actual ES Goals")
 corr <- round(cor(preds2013$outcome, preds2013$cumulative), digits = 4)
 plot13cum <- ggplot(preds2013, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 ES Goals, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted ES Goals") + ylab("Actual ES Goals")
 corr <- round(cor(preds2013$outcome, preds2013$mean), digits = 4)
 plot13mean <- ggplot(preds2013, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 ES Goals, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted ES Goals") + ylab("Actual ES Goals")
 png(width = 960, height = 960, 
@@ -208,32 +208,32 @@ preds2014$mean <- (preds2014$rf + preds2014$gbm + preds2014$knn) / 3
 ## graphing
 corr <- round(cor(preds2014$outcome, preds2014$naive), digits = 4)
 plot14naive <- ggplot(preds2014, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: SH Goals, 2013 vs. 2014 (r = ", corr, ")", sep = "")) +
       xlab("SH Goals in 2013 (Scaled)") + ylab("SH Goals in 2014")
 corr <- round(cor(preds2014$outcome, preds2014$rf), digits = 4)
 plot14rf <- ggplot(preds2014, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 SH Goals, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted SH Goals") + ylab("Actual SH Goals")
 corr <- round(cor(preds2014$outcome, preds2014$gbm), digits = 4)
 plot14gbm <- ggplot(preds2014, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 SH Goals, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted SH Goals") + ylab("Actual SH Goals")
 corr <- round(cor(preds2014$outcome, preds2014$knn), digits = 4)
 plot14knn <- ggplot(preds2014, aes(x=knn, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 SH Goals, k-Nearest Neighbors Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted SH Goals") + ylab("Actual SH Goals")
 corr <- round(cor(preds2014$outcome, preds2014$cumulative), digits = 4)
 plot14cum <- ggplot(preds2014, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 SH Goals, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted SH Goals") + ylab("Actual SH Goals")
 corr <- round(cor(preds2014$outcome, preds2014$mean), digits = 4)
 plot14mean <- ggplot(preds2014, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 SH Goals, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted SH Goals") + ylab("Actual SH Goals")
 png(width = 960, height = 960, 
@@ -242,32 +242,32 @@ grid.arrange(plot14naive, plot14rf, plot14gbm, plot14knn, plot14cum, plot14mean,
 dev.off()
 corr <- round(cor(preds2013$outcome, preds2013$naive), digits = 4)
 plot13naive <- ggplot(preds2013, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: SH Goals, 2012 vs. 2013 (r = ", corr, ")", sep = "")) +
       xlab("SH Goals in 2012 (Scaled)") + ylab("SH Goals in 2013")
 corr <- round(cor(preds2013$outcome, preds2013$rf), digits = 4)
 plot13rf <- ggplot(preds2013, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 SH Goals, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted SH Goals") + ylab("Actual SH Goals")
 corr <- round(cor(preds2013$outcome, preds2013$gbm), digits = 4)
 plot13gbm <- ggplot(preds2013, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 SH Goals, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted SH Goals") + ylab("Actual SH Goals")
 corr <- round(cor(preds2013$outcome, preds2013$knn), digits = 4)
 plot13knn <- ggplot(preds2013, aes(x=knn, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 SH Goals, k-Nearest Neighbors Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted SH Goals") + ylab("Actual SH Goals")
 corr <- round(cor(preds2013$outcome, preds2013$cumulative), digits = 4)
 plot13cum <- ggplot(preds2013, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 SH Goals, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted SH Goals") + ylab("Actual SH Goals")
 corr <- round(cor(preds2013$outcome, preds2013$mean), digits = 4)
 plot13mean <- ggplot(preds2013, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 SH Goals, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted SH Goals") + ylab("Actual SH Goals")
 png(width = 960, height = 960, 
@@ -341,32 +341,32 @@ preds2014$mean <- (preds2014$rf + preds2014$gbm + preds2014$svmLinear) / 3
 ## graphing
 corr <- round(cor(preds2014$outcome, preds2014$naive), digits = 4)
 plot14naive <- ggplot(preds2014, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: PP Goals, 2013 vs. 2014 (r = ", corr, ")", sep = "")) +
       xlab("PP Goals in 2013 (Scaled)") + ylab("PP Goals in 2014")
 corr <- round(cor(preds2014$outcome, preds2014$rf), digits = 4)
 plot14rf <- ggplot(preds2014, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 PP Goals, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted PP Goals") + ylab("Actual PP Goals")
 corr <- round(cor(preds2014$outcome, preds2014$gbm), digits = 4)
 plot14gbm <- ggplot(preds2014, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 PP Goals, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted PP Goals") + ylab("Actual PP Goals")
 corr <- round(cor(preds2014$outcome, preds2014$svmLinear), digits = 4)
 plot14svm <- ggplot(preds2014, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 PP Goals, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted PP Goals") + ylab("Actual PP Goals")
 corr <- round(cor(preds2014$outcome, preds2014$cumulative), digits = 4)
 plot14cum <- ggplot(preds2014, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 PP Goals, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted PP Goals") + ylab("Actual PP Goals")
 corr <- round(cor(preds2014$outcome, preds2014$mean), digits = 4)
 plot14mean <- ggplot(preds2014, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2014 PP Goals, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted PP Goals") + ylab("Actual PP Goals")
 png(width = 960, height = 960, 
@@ -375,32 +375,32 @@ grid.arrange(plot14naive, plot14rf, plot14gbm, plot14svm, plot14cum, plot14mean,
 dev.off()
 corr <- round(cor(preds2013$outcome, preds2013$naive), digits = 4)
 plot13naive <- ggplot(preds2013, aes(x=naive, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("Naive Model: PP Goals, 2012 vs. 2013 (r = ", corr, ")", sep = "")) +
       xlab("PP Goals in 2012 (Scaled)") + ylab("PP Goals in 2013")
 corr <- round(cor(preds2013$outcome, preds2013$rf), digits = 4)
 plot13rf <- ggplot(preds2013, aes(x=rf, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 PP Goals, Random Forest Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted PP Goals") + ylab("Actual PP Goals")
 corr <- round(cor(preds2013$outcome, preds2013$gbm), digits = 4)
 plot13gbm <- ggplot(preds2013, aes(x=gbm, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 PP Goals, Random Boosting Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted PP Goals") + ylab("Actual PP Goals")
 corr <- round(cor(preds2013$outcome, preds2013$svmLinear), digits = 4)
 plot13svm <- ggplot(preds2013, aes(x=svmLinear, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 PP Goals, SVM Model (r = ", corr, ")", sep = "")) +
       xlab("Predicted PP Goals") + ylab("Actual PP Goals")
 corr <- round(cor(preds2013$outcome, preds2013$cumulative), digits = 4)
 plot13cum <- ggplot(preds2013, aes(x=cumulative, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 PP Goals, Regression Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted PP Goals") + ylab("Actual PP Goals")
 corr <- round(cor(preds2013$outcome, preds2013$mean), digits = 4)
 plot13mean <- ggplot(preds2013, aes(x=mean, y=outcome)) +
-      geom_smooth() + geom_point() + 
+      geom_smooth(method="lm") + geom_point() + 
       ggtitle(paste("2013 PP Goals, Simple Ensembling (r = ", corr, ")", sep = "")) +
       xlab("Predicted PP Goals") + ylab("Actual PP Goals")
 png(width = 960, height = 960, 
