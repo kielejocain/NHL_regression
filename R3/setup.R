@@ -24,7 +24,8 @@ dbClearResult(rs)
 dbDisconnect(conn)
 
 
-# The nhlShape function takes a subset of the data in the skaterstats format
+# The nhlShape function takes a subset of the data, returning a data frame
+# with predictors in a previous season and outcomes in the next
 #
 # start = first season's stats used as factors (integer)
 # end = final season's stats used as factors (integer)
@@ -35,32 +36,39 @@ dbDisconnect(conn)
 # returns wide data frame with one row for each player
 
 nhlShape <- function(start, end, cols = NA, outcome = NA, data = skaterstats,
-                     rm.nhlnum = TRUE, rm.NA = TRUE){
+                     rm.nhlnum = TRUE, rm.season = TRUE, rm.NA = TRUE){
       # subset data to relevant seasons
-      output <- subset(data, season >= start & season <= end)
-      #convert season to number of seasons prior to target season
-      output$season <- end + 1 - output$season
-      # if asked, restrict columns
-      if (!is.na(cols[1])) {
-            output <- output[, cols]
+      data <- subset(data, season >= start & season <= end + 1)
+      output <- data.frame()
+      for (year in start:end) {
+            subData <- subset(data, season == year)
+            #convert season to number of seasons prior to target season
+            subData$season <- 1
+            # if asked, restrict columns
+            if (!is.na(cols[1])) {
+                  subData <- subData[, cols]
+            }
+            # if asked, add the values of the outcome
+            if (!is.na(outcome)) {
+                  values <- subset(data, season == year + 1)
+                  values <- values[, c(1, outcome)]
+                  names(values)[2] <- "outcome"
+                  subData <- merge(subData, values)
+            }
+            # unless requested, remove season
+            if (rm.season) {
+                  subData <- subData[, -2]
+            }
+            # unless requested, remove nhl_num column
+            if (rm.nhlnum) {
+                  subData <- subData[, -1]
+            }
+            # unless requested, only deal in complete cases 
+            if (rm.NA) {
+                  subData <- subData[complete.cases(subData), ]
+            }
+            output <- rbind(output, subData)
       }
-      output <- reshape(output, timevar = "season", idvar = "nhl_num",
-                      direction = "wide")
-      # if asked, add the values of the outcome
-      if (!is.na(outcome)) {
-            values <- subset(data, season == end+1)
-            values <- values[, c(1, outcome)]
-            names(values)[2] <- "outcome"
-            output <- merge(output, values)
-      }
-      # unless requested, remove nhl_num column
-      if (rm.nhlnum) {
-            output <- output[, -1]
-      }
-      # unless requested, only deal in complete cases 
-      if (rm.NA) {
-            output <- output[complete.cases(output), ]
-      }      
       return(output)
 }
 
@@ -131,81 +139,7 @@ nhlBuild <- function(data, method = "rf", perc = 1, seed = NA, ...) {
 }
 
 
-# the nhlAnalyze function is used to help with factor analysis.  It has been generalized
-# in nhlAnalyze2.
-#
-# rfdata = data to plug into the random forest models (data frame)
-# gbmdata = data to plug into the boosting models (data frame)
-# x.cutoff = cutoff for importance variables of x-method models (numeric)
-# seed = seed to use if reproducibility is desired (integer)
-#
-# returns a matrix with factor names and associated importance metrics
-
-nhlAnalyze <- function(rfdata, gbmdata, gbm.cutoff = 4, rf.cutoff = 100, seed = NA) {
-      # if asked, set seed
-      if (!is.na(seed)) {
-            set.seed(seed)
-      }
-      # set validation controls
-      fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
-      #build random forest models
-      rfmod1 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE,
-                         trControl = fitControl)
-      rfmod2 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE, 
-                         trControl = fitControl)
-      rfmod3 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE,
-                         trControl = fitControl)
-      rfmod4 <- nhlBuild(data = rfdata, perc = 0.7, importance = TRUE,
-                         trControl = fitControl)
-      # pull importance data
-      rfsum1 <- data.frame(var = row.names(varImp(rfmod1)[['importance']]),
-                           imp = varImp(rfmod1)[['importance']]$Overall)
-      rfsum2 <- data.frame(var = row.names(varImp(rfmod2)[['importance']]),
-                           imp = varImp(rfmod2)[['importance']]$Overall)
-      rfsum3 <- data.frame(var = row.names(varImp(rfmod3)[['importance']]),
-                           imp = varImp(rfmod3)[['importance']]$Overall)
-      rfsum4 <- data.frame(var = row.names(varImp(rfmod4)[['importance']]),
-                           imp = varImp(rfmod4)[['importance']]$Overall)
-      # compile into one matrix
-      rfsum <- merge(rfsum1, rfsum2, by = 1, suffixes = c(".1", ".2"))
-      rfsumm <- merge(rfsum3, rfsum4, by = 1, suffixes = c(".3", ".4"))
-      rfsum <- merge(rfsum, rfsumm)
-      # compute totals
-      rfsum$rf.tot <- rfsum$imp.1 + rfsum$imp.2 + rfsum$imp.3 + rfsum$imp.4
-      # order factors by importance metric
-      rfsum <- rfsum[order(rfsum$rf.tot, decreasing = TRUE),]
-      # drop unimportant variables and individual model data
-      rfsum <- rfsum[rfsum$rf.tot > rf.cutoff, c(1, 6)]
-      row.names(rfsum) <- NULL
-      # repeat for gbm models
-      gbmmod1 <- nhlBuild(data = gbmdata, method = "gbm", perc = 0.7, 
-                          trControl = fitControl)
-      gbmmod2 <- nhlBuild(data = gbmdata, method = "gbm", perc = 0.7, 
-                          trControl = fitControl)
-      gbmmod3 <- nhlBuild(data = gbmdata, method = "gbm", perc = 0.7, 
-                          trControl = fitControl)
-      gbmmod4 <- nhlBuild(data = gbmdata, method = "gbm", perc = 0.7, 
-                          trControl = fitControl)
-      gbmsum1 <- as.data.frame(summary(gbmmod1, plotit=FALSE))
-      gbmsum2 <- as.data.frame(summary(gbmmod2, plotit=FALSE))
-      gbmsum3 <- as.data.frame(summary(gbmmod3, plotit=FALSE))
-      gbmsum4 <- as.data.frame(summary(gbmmod4, plotit=FALSE))
-      gbmsum <- merge(gbmsum1, gbmsum2, by = 1)
-      names(gbmsum) <- c("var", "var.inf.1", "var.inf.2")
-      gbmsum <- merge(gbmsum, gbmsum3, by = 1)
-      names(gbmsum)[4] <- "var.inf.3"
-      gbmsum <- merge(gbmsum, gbmsum4, by = 1)
-      names(gbmsum)[5] <- "var.inf.4"
-      gbmsum$gbm.tot <- gbmsum$var.inf.1 + gbmsum$var.inf.2 + gbmsum$var.inf.3 + gbmsum$var.inf.4
-      gbmsum <- gbmsum[order(gbmsum$gbm.tot, decreasing = TRUE), ]
-      gbmsum <- gbmsum[gbmsum$gbm.tot > gbm.cutoff, c(1, 6)]
-      row.names(gbmsum) <- NULL
-      output <- merge(rfsum, gbmsum, all = TRUE, sort = FALSE)
-      return(output)
-}
-
-
-# the nhlAnalyze2 function generalizes the functionality of nhlAnalyze by allowing
+# the nhlAnalyze function generalizes the functionality of nhlAnalyze by allowing
 # a general method to be passed and additional parameters to be passed to train.
 #
 # data = the data to be analyzed; needs an 'outcome' factor (data frame)
@@ -216,7 +150,7 @@ nhlAnalyze <- function(rfdata, gbmdata, gbm.cutoff = 4, rf.cutoff = 100, seed = 
 #
 # returns a matrix with factor names and associated importance metrics
 
-nhlAnalyze2 <- function(data, method = "rf", cutoff = 0, seed = NA, ...) {
+nhlAnalyze <- function(data, method = "rf", cutoff = 0, seed = NA, ...) {
       # if asked, set the seed
       if (!is.na(seed)) {
             set.seed(seed)
@@ -257,19 +191,20 @@ nhlAnalyze2 <- function(data, method = "rf", cutoff = 0, seed = NA, ...) {
 # cols = the columns to be used by each method (list of integer vectors named after methods)
 # data = the data set (data frame)
 # methods = the methods to train as first-level models (string vector)
-# controls = the trControl objects to use for each method (list of trControl objects)
+# controls = the trControl objects to use for each method (list of named trainControl objects)
+# grids = the data frames to pass into tuneGrid for each method (list of named data frames)
 # seed = seed to use if reproducibility is desired (integer)
 #
 # returns a list object with each first-level model, the columns used, and the final model
 
 nhlModel <- function(start, end, outcome, cols, data = skaterstats, methods = c("rf", "gbm"), controls = NA,
-                     seed = NA) {
+                     grids = NA, seed = NA) {
       print("Building data sets")
       # shape and structure the data
       modData <- list()
       for (i in 1:length(methods)) {
             modData[[i]] <- nhlShape(start, end, cols = cols[[methods[i]]], outcome = outcome,
-                                data = data, rm.nhlnum = F, rm.NA = FALSE)
+                                data = data, rm.nhlnum = FALSE, rm.NA = FALSE)
       }
       # define training set
       inTrain <- createDataPartition(modData[[1]]$outcome, list = FALSE)

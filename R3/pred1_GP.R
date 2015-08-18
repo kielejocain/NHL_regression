@@ -9,11 +9,11 @@ skaterstats$player_position <- as.factor(skaterstats$player_position)
 ## subset the data and build test models, then look at importance output
 # fitData <- nhlShape(2011, 2011, outcome = 3)
 # factControl <- trainControl(method = "repeatedcv", number = 10, repeats = 5)
-# gpFactors.rf <- nhlAnalyze2(fitData, seed = 203622, importance = TRUE, trControl = factControl)
-# gpFactors.gbm <- nhlAnalyze2(fitData, method = "gbm", seed = 654566, trControl = factControl)
-# gpFactors.pls <- nhlAnalyze2(fitData, method = "pls", seed = 847244, trControl = factControl)
-# gpFactors.knn <- nhlAnalyze2(fitData, method = "knn", seed = 174633, trControl = factControl)
-# gpFactors.svm <- nhlAnalyze2(fitData, method = "svmLinear", seed = 287174, trControl = factControl)
+# gpFactors.rf <- nhlAnalyze(fitData, seed = 203622, importance = TRUE, trControl = factControl)
+# gpFactors.gbm <- nhlAnalyze(fitData, method = "gbm", seed = 654566, trControl = factControl)
+# gpFactors.pls <- nhlAnalyze(fitData, method = "pls", seed = 847244, trControl = factControl)
+# gpFactors.knn <- nhlAnalyze(fitData, method = "knn", seed = 174633, trControl = factControl)
+# gpFactors.svm <- nhlAnalyze(fitData, method = "svmLinear", seed = 287174, trControl = factControl)
 
 ## use the importance output to select factors
 cols <- list()
@@ -40,7 +40,7 @@ controls[[5]] <- fitControl
 # gpModel3 <- nhlModel(2010, 2010, outcome = 3, cols = cols, methods = c("rf", "gbm", "svmLinear"),
 #                      controls = controls, seed = 244416)
 # gpCorrs3 <- nhlCorr(2010, 2013, 3, gpModel3)
-gpModel4 <- nhlModel(2013, 2013, outcome = 3, cols = cols, methods = c("rf", "gbm", "svmLinear"),
+gpModel4 <- nhlModel(2013, 2013, outcome = 3, cols = cols, methods = c("gbm", "svmLinear"),
                      controls = controls, seed = 174896)
 gpCorrs4 <- nhlCorr(2010, 2013, 3, gpModel4)
 
