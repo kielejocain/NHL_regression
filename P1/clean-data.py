@@ -39,9 +39,7 @@ def gather(query):
 
 
 if __name__ == '__main__':
-    df = gather('select * from skater_data;')
+    df = gather('select * from skater_data where season=2019;')
 
     print(df.shape)
     print(df.head())
-
-
