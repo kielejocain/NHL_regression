@@ -5,3 +5,7 @@ graphics/
 .Rhistory
 *.Rproj
 *.RData
+
+*.idea
+*.ini
+
