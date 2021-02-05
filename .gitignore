@@ -9,3 +9,7 @@ graphics/
 *.idea
 *.ini
 
+*.pyc
+
+*.csv
+*.png

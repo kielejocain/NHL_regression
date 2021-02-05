@@ -1,4 +1,4 @@
-# clean-data.py
+# pgdata.py
 #
 # Download and prepare the data for use from a postgres instance.
 #######################################
@@ -6,10 +6,10 @@
 from configparser import ConfigParser
 
 import pandas as pd
-import psycopg2
+from sqlalchemy import create_engine
 
 
-def config(filename='database.ini', section='postgresql'):
+def configure_engine(filename='database.ini', section='postgresql'):
     # create a parser
     parser = ConfigParser()
     # read config file
@@ -24,22 +24,27 @@ def config(filename='database.ini', section='postgresql'):
     else:
         raise Exception('Section {0} not found in the {1} file'.format(section, filename))
 
-    return db
+    return create_engine(f'postgresql+psycopg2://{db["user"]}:{db["password"]}@{db["host"]}/{db["database"]}')
 
 
 def gather(query):
-    conn = psycopg2.connect(**config())
-    cur = conn.cursor()
-    cur.execute(query)
-    cols = [d[0] for d in cur.description]
-    data = cur.fetchall()
+    engine = configure_engine()
+    conn = engine.connect()
+    data = pd.read_sql(query, conn)
     conn.close()
 
-    return pd.DataFrame(data=data, columns=cols)
+    return data
+
+
+def write(table, data, **kwargs):
+    engine = configure_engine()
+    conn = engine.connect()
+    data.to_sql(name=table, con=conn, **kwargs)
+    conn.close()
 
 
 if __name__ == '__main__':
-    df = gather('select * from skater_data where season=2019;')
+    df = gather('select * from skaterstats where season=2019;')
 
     print(df.shape)
     print(df.head())
