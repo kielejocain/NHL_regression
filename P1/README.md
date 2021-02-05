@@ -19,4 +19,4 @@ To connect to the local Postgres DB, you'll need a `database.ini` file in this f
     user=myuser
     password=mypassword
 
-
+To run the training, simply call `model.py`.
