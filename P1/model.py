@@ -14,10 +14,10 @@ from sklearn.preprocessing import StandardScaler
 import pgdata
 
 
-def clean_season(season_data, max_games):
+def clean_season(season_data, max_games, skip_count):
     """Takes in a season of NHL skater data and prepares it to be modeled."""
     output = season_data.set_index('nhl_num')
-    for c in list(output.columns)[2:]:
+    for c in list(output.columns)[skip_count:]:
         output[c] = output[c] / output['games_played']
     output['games_played'] = output['games_played'] / max_games
     return output
@@ -29,19 +29,20 @@ if __name__ == '__main__':
     pca_out = False      # whether or not we need to save off pca graphs/components
     start_season = 2009  # first year of first season (assuming typical October start)
     end_season = 2019    # first year of last season (assuming typical October start)
+    skip_cols = 3        # skip id, season, and games_played columns for most computations
 
     # gather seasonal data from postgres
     data = []
     for season in range(start_season, end_season+1):
         raw = pgdata.gather(f'select * from skaterstats where season = {season}')
-        data.append(clean_season(raw, nhl_games_played.get(season, 82)))
+        data.append(clean_season(raw, nhl_games_played.get(season, 82), skip_cols))
 
     # create PCA dataset
     pca_data = pd.concat(data)
 
     # filter out players that played fewer than 10 games, drop games played and team name columns
     pca_data = pca_data.loc[pca_data.games_played >= 0.1]
-    pca_data = pca_data.iloc[:, 2:]
+    pca_data = pca_data.iloc[:, skip_cols:]
 
     # scale and transform the data
     scaler = StandardScaler()
@@ -68,8 +69,8 @@ if __name__ == '__main__':
         idxs.append(data[i].index.intersection(data[i+1].index))
     for i, idx in enumerate(idxs):
         Xs.append(data[i].loc[idx])
-    X = pca.transform(scaler.transform(pd.concat(Xs[:-1]).iloc[:, 2:]))[:, :20]
-    X_test = pca.transform(scaler.transform(Xs[-1].iloc[:, 2:]))[:, :20]
+    X = pca.transform(scaler.transform(pd.concat(Xs[:-1]).iloc[:, skip_cols:]))[:, :20]
+    X_test = pca.transform(scaler.transform(Xs[-1].iloc[:, skip_cols:]))[:, :20]
 
     # need to correct games played to account for seasonal variance
     stats = [
@@ -80,7 +81,7 @@ if __name__ == '__main__':
         'es_goals_against', 'pp_goals_against', 'sh_goals_against',
         'es_toi', 'pp_toi', 'sh_toi',
         'shots', 'fo_wins', 'fo_losses',
-        'minors', 'majors', 'misconducts'
+        'minors', 'majors', 'misconducts', 'game_misconducts'
     ]
     preds = {}
     for stat in stats:
@@ -107,5 +108,21 @@ if __name__ == '__main__':
     pred_df['games_played'] = pred_df['games_played'] * nhl_games_played.get(end_season + 1, 82)
     for col in list(pred_df.columns)[1:]:
         pred_df[col] = pred_df[col] * pred_df['games_played']
+
+    # need penalty_minutes
+    pred_df['goals'] = pred_df['es_goals'] + pred_df['pp_goals'] + pred_df['sh_goals']
+    pred_df['assists'] = pred_df['es_assists'] + pred_df['pp_assists'] + pred_df['sh_assists']
+    pred_df['es_points'] = pred_df['es_goals'] + pred_df['es_assists']
+    pred_df['pp_points'] = pred_df['pp_goals'] + pred_df['pp_assists']
+    pred_df['sh_points'] = pred_df['sh_goals'] + pred_df['sh_assists']
+    pred_df['points'] = pred_df['es_points'] + pred_df['pp_points'] + pred_df['sh_points']
+    pred_df['plus_minus'] = pred_df['es_goals_for'] + pred_df['sh_goals_for'] - pred_df['es_goals_against'] - pred_df['sh_goals_against']
+    pred_df['toi'] = pred_df['es_toi'] + pred_df['pp_toi'] + pred_df['sh_toi']
+    pred_df['shot_pct'] = pred_df['goals'] / pred_df['shots']
+    pred_df['penalty_minutes'] = 2 * pred_df['minors'] + 5 * pred_df['majors'] + 10 * (pred_df['misconducts'] + pred_df['game_misconducts'])
+
+    # with joining done, pull nhl_num out of index and generate one called 'id'
+    pred_df.reset_index(inplace=True)
+    pred_df.index.set_names(names='id', inplace=True)
 
     pgdata.write('skatpred', pred_df, if_exists='replace')
